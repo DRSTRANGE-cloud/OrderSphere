@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Manage Products · OrderSphere{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Main</div>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link active"><span class="sl-icon">🛍️</span> Products</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon">🚚</span> Agents</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+  </aside>
+
+  <div class="admin-content">
+    <div class="page-header flex-between">
+      <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-sub">{{ products|length }} products in catalogue</p>
+      </div>
+      <a href="/admin/product/add" class="btn btn-primary">+ Add Product</a>
+    </div>
+
+    <div class="table-wrap fade-in">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>
+              <div style="display:flex;gap:12px;align-items:center">
+                {% if p.image_url %}
+                <img src="{{ p.image_url }}" style="width:40px;height:40px;border-radius:6px;object-fit:cover"/>
+                {% else %}
+                <div style="width:40px;height:40px;border-radius:6px;background:var(--bg-mid);display:flex;align-items:center;justify-content:center">🛒</div>
+                {% endif %}
+                <div>
+                  <div class="fw-700" style="font-size:.9rem">{{ p.name }}</div>
+                  <div class="text-muted" style="font-size:.76rem">{{ p.slug }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:.85rem">{{ p.category or '—' }}</td>
+            <td class="fw-700 text-accent">₹{{ "%.0f"|format(p.price) }}</td>
+            <td>
+              <span style="color:{% if p.stock==0 %}#f87171{% elif p.stock<=5 %}#fbbf24{% else %}#d7d9dc{% endif %};font-weight:700">
+                {{ p.stock }}
+              </span>
+            </td>
+            <td>
+              {% if p.avg_rating > 0 %}
+              <span style="color:#fbbf24">⭐ {{ "%.1f"|format(p.avg_rating) }}</span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td>
+              {% if p.is_active %}
+              <span class="status-badge" style="background:rgba(116,119,121,.12);color:#d7d9dc;border-color:rgba(116,119,121,.25)">Active</span>
+              {% else %}
+              <span class="status-badge" style="background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.2)">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <a href="/admin/product/edit/{{ p.product_id }}" class="btn btn-outline btn-sm">Edit</a>
+                <button onclick="openDeleteModal({{ p.product_id }}, '{{ p.name }}')" class="btn btn-danger btn-sm" type="button">Deactivate</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center">
+  <div class="card" style="max-width:400px;width:90%;animation:scaleIn 0.3s ease">
+    <div style="padding:24px">
+      <h2 style="margin:0 0 12px;color:#eef1f4">Deactivate Product?</h2>
+      <p style="margin:0 0 24px;color:#a7adb2">This product will be hidden from customers. It can be reactivated later.</p>
+      <div id="productName" style="background:rgba(42,28,51,.5);padding:12px;border-radius:8px;margin-bottom:24px;color:#d7d9dc;font-weight:500"></div>
+      <div style="display:flex;gap:12px;justify-content:flex-end">
+        <button onclick="closeDeleteModal()" class="btn btn-outline">Cancel</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger">Deactivate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    display: flex !important;
+  }
+</style>
+
+<script>
+  let deleteProductId = null;
+  
+  function openDeleteModal(productId, productName) {
+    deleteProductId = productId;
+    document.getElementById('productName').textContent = productName;
+    document.getElementById('deleteModal').style.display = 'flex';
+  }
+  
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+    deleteProductId = null;
+  }
+  
+  document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (deleteProductId) {
+      window.location.href = '/admin/product/delete/' + deleteProductId;
+    }
+  });
+  
+  // Close modal when clicking outside
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeDeleteModal();
+    }
+  });
+</script>
+{% endblock %}

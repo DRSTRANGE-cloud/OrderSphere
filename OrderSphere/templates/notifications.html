@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Notifications · OrderSphere{% endblock %}
+{% block content %}
+<div class="main-wrap">
+  <div class="page-header">
+    <h1 class="page-title">🔔 Notifications</h1>
+    <p class="page-sub">{{ notifications|length }} notification(s)</p>
+  </div>
+
+  {% if notifications %}
+  <div class="notif-list fade-in">
+    {% for n in notifications %}
+    <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+      <div class="notif-dot notif-{{ n.notif_type or 'info' }}"></div>
+      <div style="flex:1">
+        <div class="notif-msg">{{ n.message }}</div>
+        <div class="notif-time">{{ n.created_at.strftime('%d %b %Y, %I:%M %p') if n.created_at else '' }}</div>
+      </div>
+      {% if not n.is_read %}
+      <span style="font-size:.7rem;font-weight:700;color:var(--accent);background:var(--accent-soft);
+                   padding:2px 8px;border-radius:10px;white-space:nowrap">NEW</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state fade-in">
+    <div class="empty-icon">🔔</div>
+    <p class="empty-title">No notifications</p>
+    <p class="empty-sub">You're all caught up!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

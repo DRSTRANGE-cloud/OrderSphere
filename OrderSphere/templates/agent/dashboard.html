@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Agent Dashboard · OrderSphere{% endblock %}
+{% block content %}
+<div class="main-wrap">
+  <div class="page-header flex-between">
+    <div>
+      <h1 class="page-title">🚚 My Deliveries</h1>
+      <p class="page-sub">{{ active_orders|length }} active · {{ total_delivered }} total delivered</p>
+    </div>
+    <div class="kpi-card" style="padding:14px 20px;text-align:center;min-width:120px">
+      <div class="kpi-icon" style="font-size:1.2rem">✅</div>
+      <div class="kpi-val" style="font-size:1.5rem">{{ total_delivered }}</div>
+      <div class="kpi-label">Delivered</div>
+    </div>
+  </div>
+
+  {% if active_orders %}
+  <div style="display:flex;flex-direction:column;gap:16px">
+    {% for o in active_orders %}
+    <div class="card fade-up" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+      <div class="flex-between" style="flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <a href="/orders/{{ o.order_id }}" class="fw-700 text-accent" style="font-size:1rem">#{{ o.order_id }}</a>
+            <span class="status-badge st-{{ o.status.lower() }}">
+              {{ {'Pending':'⏳','Processing':'🔄','Shipped':'📦','Out_for_Delivery':'🚚'}.get(o.status,'') }}
+              {{ o.status.replace('_',' ') }}
+            </span>
+          </div>
+          <div style="font-size:.88rem;color:var(--text-muted);display:flex;flex-direction:column;gap:3px">
+            <span>👤 <strong style="color:var(--text-main)">{{ o.username }}</strong>
+              {% if o.phone %} · 📞 {{ o.phone }}{% endif %}
+            </span>
+            {% if o.line1 %}
+            <span>📍 {{ o.line1 }}, {{ o.city }} — {{ o.pincode }}</span>
+            {% endif %}
+            <span>🕐 Ordered {{ o.ordered_at.strftime('%d %b, %I:%M %p') if o.ordered_at else '' }}</span>
+          </div>
+        </div>
+
+        <form method="POST" action="/agent/update/{{ o.order_id }}"
+              style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select name="status" class="sort-select">
+            <option value="Shipped"          {% if o.status=='Shipped'           %}selected{% endif %}>📦 Shipped</option>
+            <option value="Out_for_Delivery" {% if o.status=='Out_for_Delivery'  %}selected{% endif %}>🚚 Out for Delivery</option>
+            <option value="Delivered"        {% if o.status=='Delivered'         %}selected{% endif %}>✅ Delivered</option>
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm">Update</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state fade-in">
+    <div class="empty-icon">🎉</div>
+    <p class="empty-title">No active deliveries!</p>
+    <p class="empty-sub">All caught up. New assignments will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

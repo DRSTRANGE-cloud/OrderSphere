@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product · OrderSphere{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Main</div>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link active"><span class="sl-icon">🛍️</span> Products</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon">🚚</span> Agents</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+  </aside>
+
+  <div class="admin-content">
+    <a href="/admin/products" class="back-link">← Back to Products</a>
+    <h1 class="page-title" style="margin-top:12px">
+      {% if product %}Edit Product{% else %}Add New Product{% endif %}
+    </h1>
+
+    <div style="max-width:640px;margin-top:24px">
+      <div class="card scale-in">
+        <form method="POST" action="{{ '/admin/product/edit/'+product.product_id|string if product else '/admin/product/add' }}">
+          <div class="field-row">
+            <div class="field">
+              <label>Product Name *</label>
+              <input type="text" name="name" value="{{ product.name if product else '' }}" required/>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select name="cat_id">
+                <option value="">— Select Category —</option>
+                {% for cat in categories %}
+                <option value="{{ cat.cat_id }}" {% if product and product.cat_id==cat.cat_id %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Description</label>
+            <textarea name="description" rows="4" placeholder="Product description…">{{ product.description if product else '' }}</textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Price (₹) *</label>
+              <input type="number" name="price" step="0.01" min="0"
+                     value="{{ product.price if product else '' }}" required/>
+            </div>
+            <div class="field">
+              <label>Stock Quantity *</label>
+              <input type="number" name="stock" min="0"
+                     value="{{ product.stock if product else 0 }}" required/>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Image URL</label>
+            <input type="url" name="image_url" placeholder="https://example.com/image.jpg"
+                   value="{{ product.image_url if product else '' }}"/>
+          </div>
+
+          {% if product %}
+          <div class="field" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" name="is_active" id="is_active" {% if product.is_active %}checked{% endif %}
+                   style="width:auto;accent-color:var(--primary)"/>
+            <label for="is_active" style="text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--text-main)">Product is Active (visible to customers)</label>
+          </div>
+          {% endif %}
+
+          <div class="form-actions" style="margin-top:8px">
+            <a href="/admin/products" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              {% if product %}Save Changes{% else %}Add Product{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

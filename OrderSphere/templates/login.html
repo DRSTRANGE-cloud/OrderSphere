@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In | OrderSphere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-body auth-split">
+  <section class="auth-brand-panel">
+    <img src="{{ url_for('static', filename='img/ordersphere-logo.png') }}" alt="OrderSphere" class="auth-brand-logo"/>
+    <h1>Track, manage, and deliver nature's freshest orders.</h1>
+    <p>Premium order management for flowers, plants, gardening tools, seeds, fertilizers, and decorative greens.</p>
+  </section>
+
+  <section class="auth-form-panel">
+    <div class="form-card auth-card slide-panel">
+      <div class="auth-logo">Order<span>Sphere</span></div>
+      <div class="auth-logo-sub">Welcome back to your fulfilment workspace</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat,msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" action="/login" novalidate class="auth-form">
+        <div class="floating-field">
+          <input id="username" type="text" name="username" value="{{ login_identifier or '' }}" required autofocus autocomplete="username" placeholder=" "/>
+          <label for="username">Username or email</label>
+        </div>
+        <div class="floating-field password-field">
+          <input id="password" type="password" name="password" required autocomplete="current-password" placeholder=" "/>
+          <label for="password">Password</label>
+          <button type="button" class="password-toggle" data-target="password" aria-label="Show password">Show</button>
+        </div>
+        <div class="auth-row">
+          <label class="check-row"><input type="checkbox" name="remember"> Remember me</label>
+          <a href="/forgot-password">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Sign in</button>
+      </form>
+
+      <p class="form-footer">New here? <a href="/signup">Create an account</a></p>
+    </div>
+  </section>
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>

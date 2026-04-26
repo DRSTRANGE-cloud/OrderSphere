@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}My Addresses · OrderSphere{% endblock %}
+{% block content %}
+<div class="main-wrap">
+  <div class="page-header">
+    <h1 class="page-title">📍 My Addresses</h1>
+    <p class="page-sub">Manage your delivery addresses</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+
+    <!-- Existing Addresses -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      {% for a in addresses %}
+      <div class="card fade-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+        <div class="flex-between" style="margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:.78rem;font-weight:700;background:var(--accent-soft);color:var(--accent);
+                         padding:3px 10px;border-radius:20px">{{ a.label }}</span>
+            {% if a.is_default %}
+            <span style="font-size:.72rem;font-weight:700;background:rgba(116,119,121,.12);color:#d7d9dc;
+                         padding:3px 10px;border-radius:20px">Default</span>
+            {% endif %}
+          </div>
+          <a href="/addresses/delete/{{ a.address_id }}" class="btn btn-danger btn-sm"
+             onclick="return confirm('Delete this address?')">Remove</a>
+        </div>
+        <div style="font-size:.88rem;color:var(--text-muted);line-height:1.8">
+          {{ a.line1 }}{% if a.line2 %}, {{ a.line2 }}{% endif %}<br>
+          {{ a.city }}{% if a.state %}, {{ a.state }}{% endif %} — {{ a.pincode }}
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:40px 20px">
+        <div class="empty-icon">📍</div>
+        <p class="empty-title">No addresses saved</p>
+        <p class="empty-sub">Add your first delivery address →</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Add Address Form -->
+    <div class="card scale-in">
+      <h3 class="card-title">+ Add New Address</h3>
+      <form method="POST" action="/addresses/add">
+        <div class="field-row">
+          <div class="field">
+            <label>Label</label>
+            <select name="label">
+              <option>Home</option>
+              <option>Office</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;padding-bottom:4px">
+            <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:.88rem;cursor:pointer">
+              <input type="checkbox" name="is_default" style="width:auto;accent-color:var(--primary)"/>
+              Set as default
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Address Line 1 *</label>
+          <input type="text" name="line1" placeholder="House/Flat No, Street" required/>
+        </div>
+        <div class="field">
+          <label>Address Line 2</label>
+          <input type="text" name="line2" placeholder="Landmark, Area (optional)"/>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>City *</label>
+            <input type="text" name="city" placeholder="Mumbai" required/>
+          </div>
+          <div class="field">
+            <label>State</label>
+            <input type="text" name="state" placeholder="Maharashtra"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Pincode *</label>
+          <input type="text" name="pincode" placeholder="400001" pattern="\d{6}" required/>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Save Address</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

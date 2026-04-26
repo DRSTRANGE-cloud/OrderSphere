@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- SEO Meta -->
+  <title>{% block title %}OrderSphere — Intelligent Order Management{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}OrderSphere is a modern order tracking and fulfillment management platform for growing businesses.{% endblock %}"/>
+  <meta name="keywords" content="order tracking, delivery management, logistics, e-commerce, fulfillment"/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="theme-color" content="#141515"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:title"       content="{% block og_title %}OrderSphere{% endblock %}"/>
+  <meta property="og:description" content="{% block og_desc %}Intelligent Order & Fulfillment Platform{% endblock %}"/>
+  <meta property="og:image"       content="/static/img/og-cover.png"/>
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ request.url }}"/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────────────────── -->
+{% if session.user_id %}
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a class="nav-brand" href="/" aria-label="OrderSphere home">
+      <img src="{{ url_for('static', filename='img/ordersphere-logo.png') }}" alt="" class="nav-logo">
+    OrderSphere
+    </a>
+
+    {% if g_role == 'customer' %}
+    <form class="nav-search" method="GET" action="/" role="search" aria-label="Search products">
+      <span class="search-icon">🔍</span>
+      <input type="search" name="q" placeholder="Search products…"
+             value="{{ request.args.get('q','') }}" aria-label="Search"/>
+    </form>
+    {% endif %}
+
+    <div class="nav-links">
+      {% if g_role == 'customer' %}
+      <a href="/"       class="nav-link">Products</a>
+      <a href="/orders" class="nav-link">My Orders</a>
+      <a href="/addresses" class="nav-link">Addresses</a>
+      {% elif g_role == 'admin' %}
+      <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+      <a href="/admin/products"  class="nav-link">Products</a>
+      <a href="/orders"          class="nav-link">Orders</a>
+      <a href="/admin/users"     class="nav-link">Users</a>
+      <a href="/admin/analytics" class="nav-link">Analytics</a>
+      {% elif g_role == 'delivery_agent' %}
+      <a href="/agent/dashboard" class="nav-link">My Deliveries</a>
+      {% endif %}
+
+      <!-- Cart (customers only) -->
+      {% if g_role == 'customer' %}
+      <a href="/cart" class="nav-icon-btn" title="Cart" aria-label="Shopping cart">
+        🛒
+        {% if g_cart > 0 %}<span class="badge">{{ g_cart }}</span>{% endif %}
+      </a>
+      {% endif %}
+
+      <!-- Notifications -->
+      <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
+        🔔
+        {% if g_unread > 0 %}<span class="badge" id="notif-badge">{{ g_unread }}</span>{% endif %}
+        <span class="notif-popover">
+          <strong>Notifications</strong>
+          <small>{{ g_unread }} unread update{{ '' if g_unread == 1 else 's' }}</small>
+        </span>
+      </a>
+
+      <!-- User Avatar -->
+      <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
+        {{ g_username[0].upper() if g_username else '?' }}
+      </div>
+
+      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">
+        Logout
+      </a>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<!-- ── ALERTS ─────────────────────────────────────────── -->
+<div class="alert-bar" role="alert" aria-live="polite">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}" style="margin-top:12px;">
+        {{ '✅' if cat=='success' else ('❌' if cat=='error' else '⚠️') }} {{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<!-- ── MAIN CONTENT ───────────────────────────────────── -->
+<main id="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer" role="contentinfo">
+  <p>© 2024 <strong style="color:var(--accent)">OrderSphere</strong> · Built with Flask & MySQL · Real-time logistics made simple</p>
+</footer>
+
+<!-- Notification badge live update -->
+<script>
+  (function() {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    setInterval(async () => {
+      try {
+        const r = await fetch('/api/notifications/count');
+        const d = await r.json();
+        if (d.count > 0) {
+          badge.textContent = d.count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch(e) {}
+    }, 30000);
+  })();
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

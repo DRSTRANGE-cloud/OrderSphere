@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Delivery Agents · OrderSphere{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Main</div>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon">🛍️</span> Products</a>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">People</div>
+    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link active"><span class="sl-icon">🚚</span> Agents</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+  </aside>
+
+  <div class="admin-content">
+    <div class="page-header">
+      <h1 class="page-title">🚚 Delivery Agents</h1>
+      <p class="page-sub">{{ agents|length }} agents registered</p>
+    </div>
+
+    <div class="table-wrap fade-in">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Vehicle</th>
+            <th>Zone</th>
+            <th>Active Orders</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in agents %}
+          <tr>
+            <td>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--info);
+                     display:flex;align-items:center;justify-content:center;
+                     font-weight:800;color:#fff;flex-shrink:0">
+                  {{ a.username[0].upper() }}
+                </div>
+                <span class="fw-700">{{ a.username }}</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:.85rem">{{ a.email }}</td>
+            <td class="text-muted" style="font-size:.85rem">{{ a.phone or '—' }}</td>
+            <td style="font-size:.85rem">{{ a.vehicle or '—' }}</td>
+            <td style="font-size:.85rem">{{ a.zone or '—' }}</td>
+            <td>
+              <span class="fw-700" style="color:{% if a.assigned_orders > 0 %}var(--warning){% else %}var(--success){% endif %}">
+                {{ a.assigned_orders }}
+              </span>
+            </td>
+            <td>
+              {% if a.is_active %}
+              <span class="status-badge st-delivered">Active</span>
+              {% else %}
+              <span class="status-badge st-cancelled">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Users · OrderSphere{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="sidebar-title">Main</div>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon">🛍️</span> Products</a>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-title">People</div>
+    <a href="/admin/users"     class="sidebar-link active"><span class="sl-icon">👥</span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon">🚚</span> Agents</a>
+    <div class="sidebar-divider"></div>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+  </aside>
+
+  <div class="admin-content">
+    <div class="page-header">
+      <h1 class="page-title">Users</h1>
+      <p class="page-sub">{{ users|length }} registered users</p>
+    </div>
+
+    <div class="table-wrap fade-in">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Orders</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:34px;height:34px;border-radius:50%;
+                     background:{% if u.role_name=='admin' %}var(--warning){% elif u.role_name=='delivery_agent' %}var(--info){% else %}var(--primary){% endif %};
+                     display:flex;align-items:center;justify-content:center;
+                     font-weight:800;font-size:.82rem;color:#fff;flex-shrink:0">
+                  {{ u.username[0].upper() }}
+                </div>
+                <span class="fw-700" style="font-size:.9rem">{{ u.username }}</span>
+              </div>
+            </td>
+            <td class="text-muted" style="font-size:.85rem">{{ u.email }}</td>
+            <td class="text-muted" style="font-size:.85rem">{{ u.phone or '—' }}</td>
+            <td>
+              {% set role_colors = {'admin':'#fbbf24','customer':'#d7d9dc','delivery_agent':'#38bdf8'} %}
+              <span class="status-badge" style="background:rgba(255,255,255,.05);color:{{ role_colors.get(u.role_name,'#aaa') }};border-color:rgba(255,255,255,.1)">
+                {{ u.role_name.replace('_',' ').title() }}
+              </span>
+            </td>
+            <td class="fw-700 text-accent">{{ u.order_count }}</td>
+            <td>
+              {% if u.is_active %}
+              <span class="status-badge st-delivered">Active</span>
+              {% else %}
+              <span class="status-badge st-cancelled">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-muted" style="font-size:.8rem">
+              {{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}
+            </td>
+            <td>
+              {% if u.user_id != session.user_id %}
+              <form method="POST" action="/admin/users/{{ u.user_id }}/delete"
+                    onsubmit="return confirm('Remove {{ u.username }} and all linked account data?')">
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+              </form>
+              {% else %}
+              <span class="text-muted" style="font-size:.8rem">Current admin</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

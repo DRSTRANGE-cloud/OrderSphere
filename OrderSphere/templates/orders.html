@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{% if role=='admin' %}All Orders{% else %}My Orders{% endif %} · OrderSphere{% endblock %}
+{% block content %}
+<div class="main-wrap">
+  <div class="page-header flex-between">
+    <div>
+      <h1 class="page-title">{% if role=='admin' %}📦 All Orders{% else %}📋 My Orders{% endif %}</h1>
+      <p class="page-sub">{{ orders|length }} order(s) found</p>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div class="filter-bar">
+    <a href="/orders" class="filter-chip {% if not status_filter %}active{% endif %}">All</a>
+    {% for s in ['Pending','Processing','Shipped','Out_for_Delivery','Delivered','Cancelled'] %}
+    <a href="/orders?status={{ s }}" class="filter-chip {% if status_filter==s %}active{% endif %}">
+      {{ s.replace('_',' ') }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if orders %}
+  <div class="table-wrap fade-in">
+    <table class="data-table" role="table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          {% if role == 'admin' %}<th>Customer</th>{% endif %}
+          <th>Items</th>
+          <th>Amount</th>
+          <th>Status</th>
+          {% if role == 'admin' %}<th>Agent</th><th>SLA</th>{% endif %}
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        {% set delayed = (o.age_hours > sla_limit and o.status not in ['Delivered','Cancelled']) %}
+        <tr class="{% if delayed %}tr-delayed{% endif %}">
+          <td><a href="/orders/{{ o.order_id }}" class="fw-700 text-accent">#{{ o.order_id }}</a></td>
+          {% if role == 'admin' %}
+          <td>
+            <div class="fw-700" style="font-size:.88rem">{{ o.username }}</div>
+            <div style="font-size:.76rem;color:var(--text-muted)">{{ o.email }}</div>
+          </td>
+          {% endif %}
+          <td style="color:var(--text-muted)">{{ o.item_count }} item(s)</td>
+          <td class="fw-700">₹{{ "%.0f"|format(o.total_amount) }}</td>
+          <td>
+            <span class="status-badge st-{{ o.status.lower() }}">
+              {% set icons = {'Pending':'⏳','Processing':'🔄','Shipped':'📦',
+                              'Out_for_Delivery':'🚚','Delivered':'✅','Cancelled':'❌'} %}
+              {{ icons.get(o.status,'') }} {{ o.status.replace('_',' ') }}
+            </span>
+          </td>
+          {% if role == 'admin' %}
+          <td style="font-size:.82rem;color:var(--text-muted)">{{ o.agent_name or '—' }}</td>
+          <td>
+            {% if delayed %}
+            <span style="color:#f87171;font-size:.78rem;font-weight:700">⚠️ {{ o.age_hours }}h — DELAYED</span>
+            {% else %}
+            <span style="color:var(--success);font-size:.78rem">{{ o.age_hours }}h</span>
+            {% endif %}
+          </td>
+          {% endif %}
+          <td style="color:var(--text-muted);font-size:.82rem">
+            {{ o.ordered_at.strftime('%d %b %Y') if o.ordered_at else '—' }}
+          </td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <a href="/orders/{{ o.order_id }}" class="btn btn-outline btn-sm">View</a>
+              <a href="/invoice/{{ o.order_id }}" class="btn btn-success btn-sm">Invoice</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="empty-state fade-in">
+    <div class="empty-icon">📭</div>
+    <p class="empty-title">No orders found</p>
+    <p class="empty-sub">{% if not status_filter %}<a href="/">Start shopping</a>{% else %}Try a different filter.{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
