@@ -24,7 +24,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px">
         <div>
           <div style="font-size:.78rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Bill To</div>
-          <div style="font-size:.9rem;color:#1a2e22;line-height:1.8">
+          <div style="font-size:.9rem;color:#141515;line-height:1.8">
             <strong>{{ order.username }}</strong><br>
             {{ order.email }}<br>
             {% if order.phone %}📞 {{ order.phone }}<br>{% endif %}
@@ -32,7 +32,7 @@
         </div>
         <div>
           <div style="font-size:.78rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Ship To</div>
-          <div style="font-size:.9rem;color:#1a2e22;line-height:1.8">
+          <div style="font-size:.9rem;color:#141515;line-height:1.8">
             {% if order.line1 %}
             {{ order.line1 }}{% if order.line2 %}, {{ order.line2 }}{% endif %}<br>
             {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} — {{ order.pincode }}

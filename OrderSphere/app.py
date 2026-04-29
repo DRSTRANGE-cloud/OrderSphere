@@ -18,10 +18,14 @@ import hmac
 import os
 import smtplib
 from email.message import EmailMessage
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 # Load environment variables from .env file
-load_dotenv()
+if load_dotenv:
+    load_dotenv()
 
 # ═══════════════════════════════════════════════════════════
 #  APP CONFIG
@@ -54,40 +58,39 @@ def get_db():
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 NATURE_CATEGORIES = [
+    ('Fresh Flowers', 'fresh-flowers'),
+    ('Bouquets', 'bouquets'),
     ('Indoor Plants', 'indoor-plants'),
     ('Outdoor Plants', 'outdoor-plants'),
-    ('Herb Plants', 'herb-plants'),
-    ('Flowering Plants', 'flowering-plants'),
-    ('Succulents', 'succulents'),
-    ('Medicinal Herbs', 'medicinal-herbs'),
-    ('Plant Care', 'plant-care'),
+    ('Gardening Tools', 'gardening-tools'),
+    ('Seeds & Fertilizers', 'seeds-fertilizers'),
 ]
 
 NATURE_PRODUCTS = [
+    ('fresh-flowers','Premium Dutch Roses','premium-dutch-roses','Fresh long-stem roses selected for gifting, events, and elegant home styling.',1299,80,'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&q=80'),
+    ('fresh-flowers','Fresh Lily Bundle','fresh-lily-bundle','Fragrant lilies with lush greens for celebrations and graceful floral orders.',1199,48,'https://images.unsplash.com/photo-1501973931234-5ac2964cd94a?w=600&q=80'),
+    ('fresh-flowers','Sunflower Stem Pack','sunflower-stem-pack','Bright fresh sunflowers bundled for cheerful gifting and decor.',899,52,'https://images.unsplash.com/photo-1470509037663-253afd7f0f51?w=600&q=80'),
+    ('fresh-flowers','Orchid Flower Stems','orchid-flower-stems','Premium orchid stems with long-lasting color and refined presentation.',1599,34,'https://images.unsplash.com/photo-1566908829550-e6551b00979b?w=600&q=80'),
+    ('bouquets','Spring Garden Bouquet','spring-garden-bouquet','Hand-tied bouquet with seasonal blooms, textured greens, and premium wrapping.',1899,35,'https://images.unsplash.com/photo-1561181286-d3fee7d55364?w=600&q=80'),
+    ('bouquets','Classic Rose Bouquet','classic-rose-bouquet','A timeless rose bouquet wrapped for birthdays, anniversaries, and proposals.',1499,44,'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=600&q=80'),
+    ('bouquets','Pastel Mixed Bouquet','pastel-mixed-bouquet','Soft pastel bouquet with gentle tones for premium gifting moments.',1699,30,'https://images.unsplash.com/photo-1487070183336-b863922373d4?w=600&q=80'),
     ('indoor-plants','Monstera Deliciosa','monstera-deliciosa','Statement indoor plant with broad split leaves for premium homes and offices.',1499,42,'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=600&q=80'),
     ('indoor-plants','Snake Plant Laurentii','snake-plant-laurentii','Air-purifying plant that handles low light and busy schedules beautifully.',899,70,'https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=600&q=80'),
-    ('indoor-plants','Peace Lily Plant','peace-lily-plant','Elegant white blooms with glossy foliage for desks, bedrooms, and lounges.',1099,38,'https://images.unsplash.com/photo-1593691509543-c55fb32e5cee?w=600&q=80'),
+    ('indoor-plants','Peace Lily Plant','peace-lily-plant','Elegant white blooms with glossy foliage for desks, bedrooms, and lounges.',1099,38,'https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?w=600&q=80'),
     ('indoor-plants','ZZ Plant','zz-plant','Glossy, drought-tolerant indoor plant with a clean architectural look.',999,55,'https://images.unsplash.com/photo-1632207691143-643e2a9a9361?w=600&q=80'),
     ('outdoor-plants','Hibiscus Outdoor Plant','hibiscus-outdoor-plant','Sun-loving flowering plant for balconies, patios, and garden borders.',699,64,'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=600&q=80'),
     ('outdoor-plants','Bougainvillea Pot Plant','bougainvillea-pot-plant','Hardy outdoor bloomer with vibrant bracts for terraces and entrances.',799,46,'https://images.unsplash.com/photo-1622923824240-05b2f1db6f38?w=600&q=80'),
-    ('outdoor-plants','Areca Palm','areca-palm','Lush palm for verandas, office corners, and shaded outdoor spaces.',1299,32,'https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?w=600&q=80'),
-    ('flowering-plants','Premium Dutch Roses','premium-dutch-roses','Fresh rose plant with premium blooms for gifting and home gardens.',1299,80,'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=600&q=80'),
-    ('flowering-plants','Jasmine Plant','jasmine-plant','Fragrant flowering climber for balconies, windows, and garden edges.',599,75,'https://images.unsplash.com/photo-1616690710400-a16d146927c5?w=600&q=80'),
-    ('flowering-plants','Marigold Flower Plant','marigold-flower-plant','Bright seasonal flowering plant for festive decor and garden beds.',299,120,'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=600&q=80'),
-    ('succulents','Echeveria Succulent','echeveria-succulent','Compact rosette succulent with low water needs and premium desk appeal.',349,95,'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=600&q=80'),
-    ('succulents','Aloe Vera Plant','aloe-vera-plant','Medicinal succulent for sunny windowsills, skincare use, and easy care.',449,88,'https://images.unsplash.com/photo-1596547609652-9cf5d8c8f6c1?w=600&q=80'),
-    ('succulents','Cactus Mini Trio','cactus-mini-trio','Set of three small cactus plants for shelves, tables, and gifting.',499,60,'https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=600&q=80'),
-    ('herb-plants','Sweet Basil Herb Plant','sweet-basil-herb-plant','Fresh basil plant for kitchen counters, pasta, pesto, and herb gardens.',299,100,'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=600&q=80'),
-    ('herb-plants','Mint Herb Plant','mint-herb-plant','Fast-growing mint for tea, chutneys, mocktails, and balcony planters.',249,110,'https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=600&q=80'),
-    ('herb-plants','Rosemary Herb Plant','rosemary-herb-plant','Aromatic herb plant for roasts, breads, infused oils, and sunny corners.',399,72,'https://images.unsplash.com/photo-1515586000433-45406d8e6662?w=600&q=80'),
-    ('medicinal-herbs','Tulsi Holy Basil Plant','tulsi-holy-basil-plant','Traditional medicinal herb plant for courtyards, balconies, and daily rituals.',249,130,'https://images.unsplash.com/photo-1589129570132-cb108b5c07d0?w=600&q=80'),
-    ('medicinal-herbs','Lemongrass Plant','lemongrass-plant','Fragrant medicinal herb for teas, soups, and natural garden borders.',349,85,'https://images.unsplash.com/photo-1623822249366-3efb23b8e0c9?w=600&q=80'),
-    ('plant-care','Organic Potting Mix','organic-potting-mix','Lightweight soil mix with compost, cocopeat, and drainage support.',399,160,'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80'),
-    ('plant-care','Neem Oil Plant Spray','neem-oil-plant-spray','Natural pest-care spray for indoor plants, herbs, and flowering plants.',299,140,'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?w=600&q=80'),
-    ('plant-care','Ceramic Decorative Planter','ceramic-decorative-planter','Minimal glazed planter for desks, shelves, and premium plant gifting.',799,120,'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=600&q=80'),
+    ('outdoor-plants','Areca Palm','areca-palm','Lush palm for verandas, office corners, and shaded outdoor spaces.',1299,32,'https://images.unsplash.com/photo-1592150621744-aca64f48394a?w=600&q=80'),
+    ('gardening-tools','Ergonomic Garden Tool Set','ergonomic-garden-tool-set','Durable trowel, cultivator, pruning shear, and gloves for everyday gardening.',999,50,'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80'),
+    ('gardening-tools','Premium Pruning Shears','premium-pruning-shears','Sharp hand pruners for flowers, shrubs, herbs, and balcony gardens.',699,75,'https://images.unsplash.com/photo-1599685315640-091a5e92cc3a?w=600&q=80'),
+    ('gardening-tools','Watering Can Matte Black','watering-can-matte-black','Balanced watering can for indoor plants, seedlings, and patio planters.',799,58,'https://images.unsplash.com/photo-1622383563227-04401ab4e5ea?w=600&q=80'),
+    ('seeds-fertilizers','Organic Vegetable Seeds Pack','organic-vegetable-seeds-pack','Curated seeds for tomatoes, basil, spinach, coriander, and chillies.',349,180,'https://images.unsplash.com/photo-1459156212016-c812468e2115?w=600&q=80'),
+    ('seeds-fertilizers','Slow Release Plant Fertilizer','slow-release-plant-fertilizer','Balanced nutrients for flowering plants, foliage, and kitchen gardens.',599,95,'https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600&q=80'),
+    ('seeds-fertilizers','Organic Potting Mix','organic-potting-mix','Lightweight soil mix with compost, cocopeat, and drainage support.',399,160,'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80'),
 ]
 
 catalog_synced = False
+demo_auth_repaired = False
 
 # ═══════════════════════════════════════════════════════════
 #  DECORATORS
@@ -200,6 +203,72 @@ def ensure_nature_catalog(force=False):
         cur.execute(f"DELETE FROM categories WHERE slug NOT IN ({cat_placeholders})", category_slugs)
         conn.commit()
         catalog_synced = True
+    finally:
+        cur.close(); conn.close()
+
+def repair_demo_accounts(force=False):
+    global demo_auth_repaired
+    if demo_auth_repaired and not force:
+        return
+    credentials = {
+        'admin': '123456',
+        'agent_raj': '123456',
+        'agent_priya': 'Agent@123',
+        'john_doe': 'User@123',
+    }
+    conn = get_db(); cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT role_id, role_name FROM roles")
+        roles = {row['role_name']: row['role_id'] for row in cur.fetchall()}
+        for username, password in credentials.items():
+            cur.execute("SELECT user_id, password FROM users WHERE username=%s", (username,))
+            user = cur.fetchone()
+            if not user:
+                role_name = 'admin' if username == 'admin' else ('delivery_agent' if username.startswith('agent_') else 'customer')
+                email = {
+                    'admin': 'admin@ordersphere.com',
+                    'agent_raj': 'raj@ordersphere.com',
+                    'agent_priya': 'priya@ordersphere.com',
+                    'john_doe': 'john@example.com',
+                }[username]
+                phone = {
+                    'admin': None,
+                    'agent_raj': '9876543210',
+                    'agent_priya': '9123456780',
+                    'john_doe': '9000011111',
+                }[username]
+                cur.execute("""
+                    INSERT INTO users (username,email,password,role_id,phone,is_active)
+                    VALUES (%s,%s,%s,%s,%s,1)
+                """, (username, email, generate_password_hash(password), roles[role_name], phone))
+                user_id = cur.lastrowid
+                if role_name == 'customer':
+                    cur.execute("""
+                        INSERT INTO addresses (user_id,label,line1,city,state,pincode,is_default)
+                        VALUES (%s,'Home','12 MG Road','Mumbai','Maharashtra','400001',1)
+                    """, (user_id,))
+                elif role_name == 'delivery_agent':
+                    zone = 'North Zone' if username == 'agent_raj' else 'South Zone'
+                    vehicle = 'Bike' if username == 'agent_raj' else 'Scooter'
+                    cur.execute("INSERT IGNORE INTO delivery_agents (user_id, vehicle, zone) VALUES (%s,%s,%s)",
+                                (user_id, vehicle, zone))
+                continue
+            try:
+                valid = check_password_hash(str(user['password']), password)
+            except Exception:
+                valid = False
+            if not valid:
+                cur.execute("UPDATE users SET password=%s, is_active=1 WHERE user_id=%s",
+                            (generate_password_hash(password), user['user_id']))
+            if username == 'john_doe':
+                cur.execute("SELECT COUNT(*) AS c FROM addresses WHERE user_id=%s", (user['user_id'],))
+                if cur.fetchone()['c'] == 0:
+                    cur.execute("""
+                        INSERT INTO addresses (user_id,label,line1,city,state,pincode,is_default)
+                        VALUES (%s,'Home','12 MG Road','Mumbai','Maharashtra','400001',1)
+                    """, (user['user_id'],))
+        conn.commit()
+        demo_auth_repaired = True
     finally:
         cur.close(); conn.close()
 
@@ -319,6 +388,7 @@ def inject_globals():
 # ═══════════════════════════════════════════════════════════
 @app.route('/login', methods=['GET','POST'])
 def login():
+    repair_demo_accounts()
     if 'user_id' in session:
         return redirect('/')
     if request.method == 'POST':
@@ -647,41 +717,55 @@ def update_cart(cid):
 @app.route('/order/place/<int:pid>')
 @login_required
 def place_order(pid):
-    """Buy Now: Add single product to cart and redirect to checkout."""
+    """Buy Now: create a one-item order and redirect to tracking."""
     uid = session['user_id']
-    qty = 1  # Buy Now always adds 1 unit
-    
-    conn = get_db(); cur = conn.cursor()
-    
-    # Validate product exists and has stock
-    cur.execute("SELECT stock, name FROM products WHERE product_id=%s AND is_active=1", (pid,))
+    qty = 1
+
+    conn = get_db(); cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT product_id, stock, name, slug, price FROM products WHERE product_id=%s AND is_active=1", (pid,))
     product = cur.fetchone()
-    
+
     if not product:
         flash("Product not found or is unavailable.", "error")
         cur.close(); conn.close()
         return redirect('/')
-    
-    if product[1] < qty:  # product[1] is stock
-        flash(f"'{product[0]}' is out of stock.", "error")
+
+    if product['stock'] < qty:
+        flash(f"'{product['name']}' is out of stock.", "error")
         cur.close(); conn.close()
-        return redirect(f'/product/{pid}')
-    
-    # Add to cart
+        return redirect(f"/product/{product['slug']}")
+
+    cur.execute("SELECT address_id FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC LIMIT 1", (uid,))
+    address = cur.fetchone()
+    if not address:
+        flash("Add a delivery address before using Buy Now.", "warning")
+        cur.close(); conn.close()
+        return redirect('/addresses')
+
     try:
+        total = float(product['price']) * qty
         cur.execute("""
-            INSERT INTO cart (user_id, product_id, quantity)
-            VALUES (%s,%s,%s)
-            ON DUPLICATE KEY UPDATE quantity = quantity + %s
-        """, (uid, pid, qty, qty))
+            INSERT INTO orders (user_id, address_id, status, total_amount, notes)
+            VALUES (%s,%s,'Pending',%s,%s)
+        """, (uid, address['address_id'], total, 'Buy Now - Payment: COD'))
         conn.commit()
-        flash(f"Added to cart! Redirecting to checkout...", "success")
-    except Exception as e:
-        flash("Failed to add to cart. Please try again.", "error")
+        order_id = cur.lastrowid
+        cur.execute("""
+            INSERT INTO order_items (order_id,product_id,quantity,unit_price)
+            VALUES (%s,%s,%s,%s)
+        """, (order_id, product['product_id'], qty, product['price']))
+        cur.execute("UPDATE products SET stock = stock - %s WHERE product_id=%s", (qty, product['product_id']))
+        conn.commit()
+        log_status(order_id, 'Pending', 'Buy Now order placed by customer', uid)
+        notify(uid, f"Order #{order_id} placed successfully.", "success")
+        flash(f"Order #{order_id} placed successfully.", "success")
+        return redirect(f'/orders/{order_id}')
+    except Exception:
+        conn.rollback()
+        flash("Failed to place order. Please try again.", "error")
+        return redirect(f"/product/{product['slug']}")
     finally:
         cur.close(); conn.close()
-    
-    return redirect('/cart')
 
 # ═══════════════════════════════════════════════════════════
 #  CHECKOUT & PLACE ORDER
@@ -692,6 +776,9 @@ def checkout():
     uid        = session['user_id']
     address_id = request.form.get('address_id')
     notes      = request.form.get('notes','').strip()
+    payment_method = request.form.get('payment_method', 'COD')
+    if payment_method not in ('COD', 'UPI', 'Card'):
+        payment_method = 'COD'
 
     conn = get_db(); cur = conn.cursor(dictionary=True)
 
@@ -723,7 +810,7 @@ def checkout():
         cur2.execute("""
             INSERT INTO orders (user_id, address_id, status, total_amount, notes)
             VALUES (%s,%s,'Pending',%s,%s)
-        """, (uid, address_id or None, total, notes or None))
+        """, (uid, address_id or None, total, f"Payment: {payment_method}" + (f" | {notes}" if notes else "")))
         conn.commit()
         order_id = cur2.lastrowid
 
@@ -1161,6 +1248,7 @@ def admin_products():
         FROM products p
         LEFT JOIN categories c ON p.cat_id=c.cat_id
         LEFT JOIN reviews r    ON r.product_id=p.product_id
+        WHERE p.is_active=1
         GROUP BY p.product_id ORDER BY p.created_at DESC
     """)
     products = cur.fetchall()
@@ -1231,14 +1319,30 @@ def admin_edit_product(pid):
     cur.close(); conn.close()
     return render_template("admin/product_form.html", product=product, categories=categories)
 
-@app.route('/admin/product/delete/<int:pid>')
+@app.route('/admin/product/delete/<int:pid>', methods=['POST', 'GET'])
 @login_required
 @admin_required
 def admin_delete_product(pid):
-    conn = get_db(); cur = conn.cursor()
-    cur.execute("UPDATE products SET is_active=0 WHERE product_id=%s", (pid,))
-    conn.commit(); cur.close(); conn.close()
-    flash("Product deactivated.", "success")
+    conn = get_db(); cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT name FROM products WHERE product_id=%s", (pid,))
+    product = cur.fetchone()
+    if not product:
+        cur.close(); conn.close()
+        flash("Product not found.", "error")
+        return redirect('/admin/products')
+    try:
+        cur.execute("DELETE FROM cart WHERE product_id=%s", (pid,))
+        cur.execute("DELETE FROM reviews WHERE product_id=%s", (pid,))
+        cur.execute("DELETE FROM products WHERE product_id=%s", (pid,))
+        conn.commit()
+        flash(f"{product['name']} deleted.", "success")
+    except mysql.connector.IntegrityError:
+        conn.rollback()
+        cur.execute("UPDATE products SET is_active=0 WHERE product_id=%s", (pid,))
+        conn.commit()
+        flash(f"{product['name']} has order history, so it was hidden instead.", "success")
+    finally:
+        cur.close(); conn.close()
     return redirect('/admin/products')
 
 # ─── Admin: Users ────────────────────────────────────────

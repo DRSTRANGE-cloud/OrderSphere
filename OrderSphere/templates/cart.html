@@ -82,8 +82,25 @@
         <textarea form="checkout-form" name="notes" rows="2" placeholder="Special instructions…"></textarea>
       </div>
 
+      <div class="field">
+        <label>Payment Method</label>
+        <div class="payment-options">
+          <label class="payment-card">
+            <input form="checkout-form" type="radio" name="payment_method" value="COD" checked>
+            <span>Cash on Delivery</span>
+          </label>
+          <label class="payment-card">
+            <input form="checkout-form" type="radio" name="payment_method" value="UPI">
+            <span>UPI</span>
+          </label>
+          <label class="payment-card">
+            <input form="checkout-form" type="radio" name="payment_method" value="Card">
+            <span>Card</span>
+          </label>
+        </div>
+      </div>
+
       <form id="checkout-form" method="POST" action="/checkout">
-        <input type="hidden" name="address_id" value="{{ addresses[0].address_id if addresses else '' }}">
         <button type="submit" class="btn btn-primary btn-full btn-lg">
           Place Order · ₹{{ "%.0f"|format(total) }}
         </button>

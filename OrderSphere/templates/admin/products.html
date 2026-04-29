@@ -74,7 +74,7 @@
             <td>
               <div style="display:flex;gap:6px">
                 <a href="/admin/product/edit/{{ p.product_id }}" class="btn btn-outline btn-sm">Edit</a>
-                <button onclick="openDeleteModal({{ p.product_id }}, '{{ p.name }}')" class="btn btn-danger btn-sm" type="button">Deactivate</button>
+                <button onclick='openDeleteModal({{ p.product_id }}, {{ p.name|tojson }})' class="btn btn-danger btn-sm" type="button">Delete</button>
               </div>
             </td>
           </tr>
@@ -86,25 +86,21 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center">
+<div id="deleteModal" class="modal" style="display:none">
   <div class="card" style="max-width:400px;width:90%;animation:scaleIn 0.3s ease">
     <div style="padding:24px">
-      <h2 style="margin:0 0 12px;color:#eef1f4">Deactivate Product?</h2>
-      <p style="margin:0 0 24px;color:#a7adb2">This product will be hidden from customers. It can be reactivated later.</p>
+      <h2 style="margin:0 0 12px;color:#eef1f4">Delete Product?</h2>
+      <p style="margin:0 0 24px;color:#a7adb2">If the product has past orders, it will be hidden to preserve order history.</p>
       <div id="productName" style="background:rgba(42,28,51,.5);padding:12px;border-radius:8px;margin-bottom:24px;color:#d7d9dc;font-weight:500"></div>
       <div style="display:flex;gap:12px;justify-content:flex-end">
         <button onclick="closeDeleteModal()" class="btn btn-outline">Cancel</button>
-        <button id="confirmDeleteBtn" class="btn btn-danger">Deactivate</button>
+        <form id="deleteProductForm" method="POST" action="">
+          <button id="confirmDeleteBtn" class="btn btn-danger" type="submit">Delete</button>
+        </form>
       </div>
     </div>
   </div>
 </div>
-
-<style>
-  .modal {
-    display: flex !important;
-  }
-</style>
 
 <script>
   let deleteProductId = null;
@@ -112,6 +108,7 @@
   function openDeleteModal(productId, productName) {
     deleteProductId = productId;
     document.getElementById('productName').textContent = productName;
+    document.getElementById('deleteProductForm').action = '/admin/product/delete/' + productId;
     document.getElementById('deleteModal').style.display = 'flex';
   }
   
@@ -119,12 +116,6 @@
     document.getElementById('deleteModal').style.display = 'none';
     deleteProductId = null;
   }
-  
-  document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (deleteProductId) {
-      window.location.href = '/admin/product/delete/' + deleteProductId;
-    }
-  });
   
   // Close modal when clicking outside
   document.getElementById('deleteModal').addEventListener('click', function(e) {

@@ -87,7 +87,7 @@
       <div class="card fade-in">
         <h3 class="card-title">🍩 Order Status</h3>
         {% set colors = {'Pending':'#fbbf24','Processing':'#38bdf8','Shipped':'#c084fc',
-                         'Out_for_Delivery':'#fb923c','Delivered':'#4ade80','Cancelled':'#f87171'} %}
+                         'Out_for_Delivery':'#fb923c','Delivered':'#d7d9dc','Cancelled':'#f87171'} %}
         <div style="display:flex;flex-direction:column;gap:10px">
           {% set total_st = status_dist|sum(attribute='cnt') %}
           {% for row in status_dist %}
