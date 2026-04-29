@@ -779,6 +779,14 @@ def checkout():
     payment_method = request.form.get('payment_method', 'COD')
     if payment_method not in ('COD', 'UPI', 'Card'):
         payment_method = 'COD'
+    
+    payment_details = ""
+    if payment_method == 'UPI':
+        upi_id = request.form.get('upi_id', '').strip()
+        if upi_id: payment_details = f" (UPI: {upi_id})"
+    elif payment_method == 'Card':
+        card_num = request.form.get('card_number', '').strip()
+        if card_num: payment_details = f" (Card ends in {card_num[-4:]})"
 
     conn = get_db(); cur = conn.cursor(dictionary=True)
 
@@ -810,7 +818,7 @@ def checkout():
         cur2.execute("""
             INSERT INTO orders (user_id, address_id, status, total_amount, notes)
             VALUES (%s,%s,'Pending',%s,%s)
-        """, (uid, address_id or None, total, f"Payment: {payment_method}" + (f" | {notes}" if notes else "")))
+        """, (uid, address_id or None, total, f"Payment: {payment_method}{payment_details}" + (f" | {notes}" if notes else "")))
         conn.commit()
         order_id = cur2.lastrowid
 
@@ -1363,6 +1371,23 @@ def admin_users():
     users = cur.fetchall()
     cur.close(); conn.close()
     return render_template("admin/users.html", users=users)
+
+@app.route('/admin/users/<int:user_id>/role', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_user_role(user_id):
+    if user_id == session.get('user_id'):
+        flash("Cannot change your own role.", "error")
+        return redirect('/admin/users')
+    new_role = request.form.get('role_id')
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("UPDATE users SET role_id=%s WHERE user_id=%s", (new_role, user_id))
+    if str(new_role) == '3':
+        cur.execute("INSERT IGNORE INTO delivery_agents (user_id, vehicle, zone) VALUES (%s, 'Bike', 'North Zone')", (user_id,))
+    conn.commit()
+    cur.close(); conn.close()
+    flash("User role updated successfully.", "success")
+    return redirect('/admin/users')
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required

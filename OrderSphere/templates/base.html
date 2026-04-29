@@ -32,7 +32,7 @@
 <body>
 
 <!-- ── NAVBAR ─────────────────────────────────────────── -->
-{% if session.user_id and g_role != 'admin' %}
+{% if session.user_id %}
 <nav class="navbar" role="navigation" aria-label="Main navigation">
   <div class="nav-inner">
     <a class="nav-brand" href="/" aria-label="OrderSphere home">
@@ -99,19 +99,13 @@
 <button class="page-back-btn" type="button" onclick="history.length > 1 ? history.back() : window.location.href='/'" aria-label="Go back">Back</button>
 {% endif %}
 
-{% if session.user_id and g_role == 'admin' %}
-<div class="admin-session-pill">
-  <span class="nav-avatar" title="{{ g_username }} (admin)">{{ g_username[0].upper() if g_username else 'A' }}</span>
-  <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">Logout</a>
-</div>
-{% endif %}
-
 <div class="alert-bar" role="alert" aria-live="polite">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for cat, msg in messages %}
-      <div class="alert alert-{{ cat }}" style="margin-top:12px;">
+      <div class="alert alert-{{ cat }}" style="margin-top:12px; position:relative; padding-right:36px;">
         {{ '✅' if cat=='success' else ('❌' if cat=='error' else '⚠️') }} {{ msg }}
+        <button onclick="this.parentElement.style.display='none'" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:inherit; font-size:1.2rem; cursor:pointer;">&times;</button>
       </div>
       {% endfor %}
     {% endif %}

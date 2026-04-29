@@ -86,19 +86,55 @@
         <label>Payment Method</label>
         <div class="payment-options">
           <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="COD" checked>
+            <input form="checkout-form" type="radio" name="payment_method" value="COD" checked onchange="togglePaymentDetails()">
             <span>Cash on Delivery</span>
           </label>
+          <div id="details-COD" class="payment-details" style="display:block; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0;">
+             <p style="font-size: 0.85rem; color: var(--text-muted);">Pay with cash when your order is delivered.</p>
+          </div>
+          
           <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="UPI">
+            <input form="checkout-form" type="radio" name="payment_method" value="UPI" onchange="togglePaymentDetails()">
             <span>UPI</span>
           </label>
+          <div id="details-UPI" class="payment-details" style="display:none; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0;">
+             <input form="checkout-form" type="text" name="upi_id" placeholder="Enter UPI ID (e.g., name@okbank)" style="width:100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+          </div>
+
           <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="Card">
+            <input form="checkout-form" type="radio" name="payment_method" value="Card" onchange="togglePaymentDetails()">
             <span>Card</span>
           </label>
+          <div id="details-Card" class="payment-details" style="display:none; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0; display:none; flex-direction:column; gap:10px;">
+             <input form="checkout-form" type="text" name="card_number" placeholder="Card Number (0000 0000 0000 0000)" style="width:100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+             <div style="display:flex; gap:10px;">
+                 <input form="checkout-form" type="text" name="card_expiry" placeholder="MM/YY" style="width:50%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+                 <input form="checkout-form" type="text" name="card_cvv" placeholder="CVV" style="width:50%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+             </div>
+          </div>
         </div>
       </div>
+
+      <script>
+      function togglePaymentDetails() {
+          document.querySelectorAll('.payment-details').forEach(el => {
+            el.style.display = 'none';
+            if(el.id === 'details-Card') el.style.setProperty('display', 'none', 'important');
+          });
+          const checked = document.querySelector('input[name="payment_method"]:checked');
+          if (checked) {
+              const details = document.getElementById('details-' + checked.value);
+              if (details) {
+                  if(checked.value === 'Card') {
+                      details.style.display = 'flex';
+                  } else {
+                      details.style.display = 'block';
+                  }
+              }
+          }
+      }
+      document.addEventListener('DOMContentLoaded', togglePaymentDetails);
+      </script>
 
       <form id="checkout-form" method="POST" action="/checkout">
         <button type="submit" class="btn btn-primary btn-full btn-lg">

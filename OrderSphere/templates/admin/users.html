@@ -70,10 +70,19 @@
             </td>
             <td>
               {% if u.user_id != session.user_id %}
-              <form method="POST" action="/admin/users/{{ u.user_id }}/delete"
-                    onsubmit="return confirm('Remove {{ u.username }} and all linked account data?')">
-                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-              </form>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <form method="POST" action="/admin/users/{{ u.user_id }}/role">
+                  <select name="role_id" onchange="this.form.submit()" class="sort-select" style="padding:4px 8px;font-size:0.75rem;">
+                    <option value="1" {% if u.role_name=='admin' %}selected{% endif %}>Admin</option>
+                    <option value="2" {% if u.role_name=='customer' %}selected{% endif %}>Customer</option>
+                    <option value="3" {% if u.role_name=='delivery_agent' %}selected{% endif %}>Agent</option>
+                  </select>
+                </form>
+                <form method="POST" action="/admin/users/{{ u.user_id }}/delete"
+                      onsubmit="return confirm('Remove {{ u.username }} and all linked account data?')">
+                  <button type="submit" class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:0.75rem;">Remove</button>
+                </form>
+              </div>
               {% else %}
               <span class="text-muted" style="font-size:.8rem">Current admin</span>
               {% endif %}

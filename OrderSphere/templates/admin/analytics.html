@@ -29,7 +29,7 @@
         <div style="position:absolute;bottom:32px;left:0;right:0;height:1px;background:var(--border)"></div>
         {% for d in daily_30 %}
         {% set pct = ((d.revenue|float / max_rev * 100)|int) if max_rev > 0 else 0 %}
-        <div style="flex:1;min-width:18px;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative">
+        <div style="flex:1;min-width:18px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;position:relative">
           <div style="width:100%;border-radius:4px 4px 0 0;
                background:linear-gradient(to top,var(--primary),var(--accent));
                height:{{ pct }}%;min-height:2px;position:relative;transition:height .5s ease"
