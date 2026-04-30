@@ -605,6 +605,49 @@ def index():
     )
 
 # ═══════════════════════════════════════════════════════════
+#  CUSTOMER DASHBOARD
+# ═══════════════════════════════════════════════════════════
+@app.route('/dashboard')
+@login_required
+def customer_dashboard():
+    uid = session['user_id']
+    conn = get_db(); cur = conn.cursor(dictionary=True)
+
+    # Get customer stats
+    cur.execute("SELECT COUNT(*) AS c FROM orders WHERE user_id=%s", (uid,))
+    total_orders = cur.fetchone()['c']
+
+    cur.execute("SELECT COUNT(*) AS c FROM orders WHERE user_id=%s AND status='Delivered'", (uid,))
+    delivered_orders = cur.fetchone()['c']
+
+    cur.execute("SELECT COUNT(*) AS c FROM orders WHERE user_id=%s AND status IN ('Pending','Processing','Shipped')", (uid,))
+    active_orders = cur.fetchone()['c']
+
+    cur.execute("SELECT COALESCE(SUM(total_amount),0) AS total FROM orders WHERE user_id=%s AND status='Delivered'", (uid,))
+    total_spent = float(cur.fetchone()['total'])
+
+    # Recent orders (last 8)
+    cur.execute("""
+        SELECT o.order_id, o.status, o.total_amount, o.ordered_at,
+               COUNT(oi.product_id) AS item_count
+        FROM orders o LEFT JOIN order_items oi ON o.order_id=oi.order_id
+        WHERE o.user_id=%s
+        GROUP BY o.order_id
+        ORDER BY o.ordered_at DESC
+        LIMIT 8
+    """, (uid,))
+    recent_orders = cur.fetchall()
+
+    cur.close(); conn.close()
+    return render_template("customer_dashboard.html",
+        total_orders=total_orders,
+        delivered_orders=delivered_orders,
+        active_orders=active_orders,
+        total_spent=total_spent,
+        recent_orders=recent_orders
+    )
+
+# ═══════════════════════════════════════════════════════════
 #  PRODUCT DETAIL
 # ═══════════════════════════════════════════════════════════
 @app.route('/product/<slug>')
@@ -722,19 +765,7 @@ def place_order(pid):
     qty = 1
 
     conn = get_db(); cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT product_id, stock, name, slug, price FROM products WHERE product_id=%s AND is_active=1", (pid,))
-    product = cur.fetchone()
-
-    if not product:
-        flash("Product not found or is unavailable.", "error")
-        cur.close(); conn.close()
-        return redirect('/')
-
-    if product['stock'] < qty:
-        flash(f"'{product['name']}' is out of stock.", "error")
-        cur.close(); conn.close()
-        return redirect(f"/product/{product['slug']}")
-
+    
     cur.execute("SELECT address_id FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC LIMIT 1", (uid,))
     address = cur.fetchone()
     if not address:
@@ -743,27 +774,54 @@ def place_order(pid):
         return redirect('/addresses')
 
     try:
+        # START TRANSACTION with strict isolation
+        conn.start_transaction(isolation_level='SERIALIZABLE')
+        
+        # Lock product row and verify stock
+        cur.execute(
+            "SELECT product_id, stock, name, slug, price FROM products WHERE product_id=%s AND is_active=1 FOR UPDATE",
+            (pid,))
+        product = cur.fetchone()
+
+        if not product:
+            conn.rollback()
+            cur.close(); conn.close()
+            flash("Product not found or is unavailable.", "error")
+            return redirect('/')
+
+        if product['stock'] < qty:
+            conn.rollback()
+            cur.close(); conn.close()
+            flash(f"'{product['name']}' is out of stock.", "error")
+            return redirect(f"/product/{product['slug']}")
+
+        # All checks passed - create order atomically
         total = float(product['price']) * qty
         cur.execute("""
             INSERT INTO orders (user_id, address_id, status, total_amount, notes)
             VALUES (%s,%s,'Pending',%s,%s)
         """, (uid, address['address_id'], total, 'Buy Now - Payment: COD'))
-        conn.commit()
         order_id = cur.lastrowid
+        
         cur.execute("""
             INSERT INTO order_items (order_id,product_id,quantity,unit_price)
             VALUES (%s,%s,%s,%s)
         """, (order_id, product['product_id'], qty, product['price']))
+        
         cur.execute("UPDATE products SET stock = stock - %s WHERE product_id=%s", (qty, product['product_id']))
+        
+        # COMMIT transaction (atomic)
         conn.commit()
+        
         log_status(order_id, 'Pending', 'Buy Now order placed by customer', uid)
         notify(uid, f"Order #{order_id} placed successfully.", "success")
         flash(f"Order #{order_id} placed successfully.", "success")
         return redirect(f'/orders/{order_id}')
-    except Exception:
+    except Exception as e:
         conn.rollback()
+        print(f"Buy Now error: {e}")
         flash("Failed to place order. Please try again.", "error")
-        return redirect(f"/product/{product['slug']}")
+        return redirect(f"/product/{product.get('slug', '/')}" if 'product' in locals() else "/")
     finally:
         cur.close(); conn.close()
 
@@ -792,7 +850,7 @@ def checkout():
 
     # Load cart
     cur.execute("""
-        SELECT c.quantity, p.product_id, p.name, p.price, p.stock
+        SELECT c.quantity, p.product_id, p.name, p.price
         FROM cart c JOIN products p ON c.product_id=p.product_id
         WHERE c.user_id=%s
     """, (uid,))
@@ -803,26 +861,41 @@ def checkout():
         cur.close(); conn.close()
         return redirect('/cart')
 
-    # Check stock
-    for item in cart_items:
-        if item['stock'] < item['quantity']:
-            flash(f"'{item['name']}' has only {item['stock']} units left.", "error")
-            cur.close(); conn.close()
-            return redirect('/cart')
-
     total = sum(float(i['price']) * i['quantity'] for i in cart_items)
 
     try:
-        # Create order
-        cur2 = conn.cursor()
+        # START TRANSACTION with strict isolation
+        conn.start_transaction(isolation_level='SERIALIZABLE')
+        cur2 = conn.cursor(dictionary=True)
+
+        # Lock and verify stock for ALL items (atomic check)
+        product_ids = [item['product_id'] for item in cart_items]
+        placeholders = ",".join(["%s"] * len(product_ids))
+        cur2.execute(f"""
+            SELECT product_id, stock, name FROM products 
+            WHERE product_id IN ({placeholders})
+            FOR UPDATE
+        """, product_ids)
+        locked_products = {row['product_id']: row for row in cur2.fetchall()}
+
+        # Validate ALL items have sufficient stock (no partial orders)
+        for item in cart_items:
+            prod = locked_products.get(item['product_id'])
+            if not prod or prod['stock'] < item['quantity']:
+                conn.rollback()
+                cur2.close(); cur.close(); conn.close()
+                prod_name = prod['name'] if prod else 'Product'
+                flash(f"❌ '{prod_name}' insufficient stock ({prod['stock'] if prod else 0} available, {item['quantity']} requested).", "error")
+                return redirect('/cart')
+
+        # All items validated - proceed with order
         cur2.execute("""
             INSERT INTO orders (user_id, address_id, status, total_amount, notes)
             VALUES (%s,%s,'Pending',%s,%s)
         """, (uid, address_id or None, total, f"Payment: {payment_method}{payment_details}" + (f" | {notes}" if notes else "")))
-        conn.commit()
         order_id = cur2.lastrowid
 
-        # Insert items & reduce stock
+        # Insert items & atomically reduce stock
         for item in cart_items:
             cur2.execute("""
                 INSERT INTO order_items (order_id,product_id,quantity,unit_price)
@@ -834,6 +907,8 @@ def checkout():
 
         # Clear cart
         cur2.execute("DELETE FROM cart WHERE user_id=%s", (uid,))
+
+        # COMMIT transaction (atomic: all or nothing)
         conn.commit()
 
         log_status(order_id, 'Pending', 'Order placed by customer', uid)
@@ -845,7 +920,9 @@ def checkout():
 
     except Exception as e:
         conn.rollback()
+        cur2.close(); cur.close(); conn.close()
         flash("Failed to place order. Please try again.", "error")
+        print(f"Checkout error: {e}")
         return redirect('/cart')
 
 # ═══════════════════════════════════════════════════════════

@@ -87,30 +87,32 @@
         <div class="payment-options">
           <label class="payment-card">
             <input form="checkout-form" type="radio" name="payment_method" value="COD" checked onchange="togglePaymentDetails()">
-            <span>Cash on Delivery</span>
+            <span>💳 Cash on Delivery</span>
           </label>
-          <div id="details-COD" class="payment-details" style="display:block; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0;">
-             <p style="font-size: 0.85rem; color: var(--text-muted);">Pay with cash when your order is delivered.</p>
+          <div id="details-COD" class="payment-details" style="display:block">
+             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Pay securely with cash when your order arrives. No advance payment needed.</p>
           </div>
           
           <label class="payment-card">
             <input form="checkout-form" type="radio" name="payment_method" value="UPI" onchange="togglePaymentDetails()">
-            <span>UPI</span>
+            <span>📱 UPI</span>
           </label>
-          <div id="details-UPI" class="payment-details" style="display:none; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0;">
-             <input form="checkout-form" type="text" name="upi_id" placeholder="Enter UPI ID (e.g., name@okbank)" style="width:100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+          <div id="details-UPI" class="payment-details" style="display:none">
+             <input form="checkout-form" type="text" name="upi_id" placeholder="Enter UPI ID (e.g., name@upi)" style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
+             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 6px 0 0 0;">You will receive a UPI payment request on your registered mobile.</p>
           </div>
 
           <label class="payment-card">
             <input form="checkout-form" type="radio" name="payment_method" value="Card" onchange="togglePaymentDetails()">
-            <span>Card</span>
+            <span>💰 Debit / Credit Card</span>
           </label>
-          <div id="details-Card" class="payment-details" style="display:none; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; margin: -5px 0 10px 0; display:none; flex-direction:column; gap:10px;">
-             <input form="checkout-form" type="text" name="card_number" placeholder="Card Number (0000 0000 0000 0000)" style="width:100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
-             <div style="display:flex; gap:10px;">
-                 <input form="checkout-form" type="text" name="card_expiry" placeholder="MM/YY" style="width:50%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
-                 <input form="checkout-form" type="text" name="card_cvv" placeholder="CVV" style="width:50%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text-main);">
+          <div id="details-Card" class="payment-details" style="display:none; flex-direction: column; gap: 10px;">
+             <input form="checkout-form" type="text" name="card_number" placeholder="Card Number" maxlength="19" style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
+             <div style="display:flex; gap: 10px;">
+                 <input form="checkout-form" type="text" name="card_expiry" placeholder="MM/YY" maxlength="5" style="flex:1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
+                 <input form="checkout-form" type="text" name="card_cvv" placeholder="CVV" maxlength="4" style="flex:0.6; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
              </div>
+             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Your card details are securely processed.</p>
           </div>
         </div>
       </div>
@@ -119,17 +121,14 @@
       function togglePaymentDetails() {
           document.querySelectorAll('.payment-details').forEach(el => {
             el.style.display = 'none';
-            if(el.id === 'details-Card') el.style.setProperty('display', 'none', 'important');
           });
           const checked = document.querySelector('input[name="payment_method"]:checked');
           if (checked) {
               const details = document.getElementById('details-' + checked.value);
               if (details) {
-                  if(checked.value === 'Card') {
-                      details.style.display = 'flex';
-                  } else {
-                      details.style.display = 'block';
-                  }
+                  details.style.display = checked.value === 'Card' ? 'flex' : 'block';
+                  // Add fade-in animation
+                  details.style.animation = 'fadeIn 0.2s ease';
               }
           }
       }

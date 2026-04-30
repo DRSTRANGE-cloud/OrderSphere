@@ -46,30 +46,18 @@
       <input type="search" name="q" placeholder="Search products…"
              value="{{ request.args.get('q','') }}" aria-label="Search"/>
     </form>
-    {% endif %}
-
+    
     <div class="nav-links">
-      {% if g_role == 'customer' %}
-      <a href="/"       class="nav-link">Products</a>
-      <a href="/orders" class="nav-link">My Orders</a>
+      <a href="/"          class="nav-link">Products</a>
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/orders"    class="nav-link">My Orders</a>
       <a href="/addresses" class="nav-link">Addresses</a>
-      {% elif g_role == 'admin' %}
-      <a href="/admin/dashboard" class="nav-link">Dashboard</a>
-      <a href="/admin/products"  class="nav-link">Products</a>
-      <a href="/orders"          class="nav-link">Orders</a>
-      <a href="/admin/users"     class="nav-link">Users</a>
-      <a href="/admin/analytics" class="nav-link">Analytics</a>
-      {% elif g_role == 'delivery_agent' %}
-      <a href="/agent/dashboard" class="nav-link">My Deliveries</a>
-      {% endif %}
 
       <!-- Cart (customers only) -->
-      {% if g_role == 'customer' %}
       <a href="/cart" class="nav-icon-btn" title="Cart" aria-label="Shopping cart">
         🛒
         {% if g_cart > 0 %}<span class="badge">{{ g_cart }}</span>{% endif %}
       </a>
-      {% endif %}
 
       <!-- Notifications -->
       <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
@@ -90,6 +78,29 @@
         Logout
       </a>
     </div>
+    {% else %}
+    <!-- Admin and Agent: minimal navbar -->
+    <div class="nav-links" style="margin-left: auto;">
+      <!-- Notifications -->
+      <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
+        🔔
+        {% if g_unread > 0 %}<span class="badge" id="notif-badge">{{ g_unread }}</span>{% endif %}
+        <span class="notif-popover">
+          <strong>Notifications</strong>
+          <small>{{ g_unread }} unread update{{ '' if g_unread == 1 else 's' }}</small>
+        </span>
+      </a>
+
+      <!-- User Avatar -->
+      <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
+        {{ g_username[0].upper() if g_username else '?' }}
+      </div>
+
+      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">
+        Logout
+      </a>
+    </div>
+    {% endif %}
   </div>
 </nav>
 {% endif %}

@@ -48,6 +48,22 @@
     padding: 0;
 }
 
+.sort-select {
+    background-color: #192830;  /* jet-black */
+    color: #ffffff;
+    border: 1px solid #2a1c33;   /* midnight-violet */
+    padding: 8px 12px;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Dropdown options */
+.sort-select option {
+    background-color: #141515;   /* onyx */
+    color: #ffffff;
+}
+
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; scroll-behavior: smooth; }
@@ -174,14 +190,25 @@ img { display: block; max-width: 100%; }
 .nav-icon-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--border-h); }
 .page-back-btn {
   position: fixed;
-  left: 18px;
-  bottom: 20px;
+  left: 28px;
+  top: 80px;
   z-index: 1000;
-  padding: 10px 15px;
+  padding: 8px 14px;
   border: 1px solid var(--border-h);
-  border-radius: 12px;
-  background: rgba(25,40,48,.86);
+  border-radius: 10px;
+  background: rgba(3,34,88,0.8);
   color: var(--text-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+.page-back-btn:hover {
+  background: rgba(3,34,88,1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(3,34,88,0.3);
   box-shadow: 0 12px 36px rgba(0,0,0,.28);
   backdrop-filter: blur(16px);
   cursor: pointer;
@@ -282,9 +309,9 @@ img { display: block; max-width: 100%; }
 
 /* ═══════════════ CARDS ═══════════════ */
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #192830;
+  border: 1px solid rgba(116,119,121,0.28);
+  border-radius: 12px;
   padding: 24px;
   backdrop-filter: blur(8px);
   transition: var(--transition);
@@ -300,9 +327,9 @@ img { display: block; max-width: 100%; }
   gap: 16px; margin-bottom: 32px;
 }
 .kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #192830;
+  border: 1px solid rgba(116,119,121,0.28);
+  border-radius: 12px;
   padding: 22px 20px;
   transition: var(--transition);
   position: relative; overflow: hidden;
@@ -325,18 +352,18 @@ img { display: block; max-width: 100%; }
   gap: 20px;
 }
 .product-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #192830;
+  border: 1px solid rgba(116,119,121,0.28);
+  border-radius: 12px;
   overflow: hidden;
   transition: var(--transition);
   display: flex; flex-direction: column;
   cursor: pointer;
 }
 .product-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--border-h);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  transform: scale(1.02);
+  border-color: var(--accent);
+  box-shadow: 0 8px 32px rgba(116,119,121,0.2);
 }
 .product-img-wrap {
   aspect-ratio: 4/3; overflow: hidden;
@@ -393,7 +420,7 @@ img { display: block; max-width: 100%; }
 /* ═══════════════ BUTTONS ═══════════════ */
 .btn {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 10px 20px; border-radius: var(--radius-sm);
+  padding: 10px 20px; border-radius: 10px;
   font-weight: 600; font-size: .88rem; cursor: pointer;
   border: none; transition: var(--transition);
   text-decoration: none; white-space: nowrap;
@@ -401,22 +428,36 @@ img { display: block; max-width: 100%; }
 .btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: #fff;
-  box-shadow: 0 2px 10px rgba(31,122,92,0.3);
+  box-shadow: 0 4px 12px rgba(3,34,88,0.25);
 }
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-h), var(--primary));
-  transform: translateY(-1px); box-shadow: 0 4px 18px rgba(31,122,92,0.4);
+  transform: scale(1.01) translateY(-1px); 
+  box-shadow: 0 6px 20px rgba(3,34,88,0.35);
   color: #fff;
 }
+.btn-primary:active { transform: scale(0.98); }
 .btn-outline {
   background: transparent;
   border: 1px solid var(--border-h); color: var(--text-muted);
 }
-.btn-outline:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.btn-outline:hover { 
+  background: var(--accent-soft); 
+  color: var(--accent); 
+  border-color: var(--accent);
+  transform: scale(1.01);
+}
 .btn-danger  { background:rgba(239,68,68,.15); color:#f87171; border:1px solid rgba(239,68,68,.3); }
-.btn-danger:hover  { background:rgba(239,68,68,.25); }
+.btn-danger:hover  { 
+  background:rgba(239,68,68,.25);
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.15);
+}
 .btn-success { background:rgba(116,119,121,.15); color:#d7d9dc; border:1px solid rgba(116,119,121,.3); }
-.btn-success:hover { background:rgba(116,119,121,.25); }
+.btn-success:hover { 
+  background:rgba(116,119,121,.25);
+  transform: scale(1.01);
+}
 .btn-sm { padding: 6px 14px; font-size: .82rem; }
 .btn-lg { padding: 13px 28px; font-size: .98rem; }
 .btn-full { width: 100%; justify-content: center; }
@@ -424,9 +465,9 @@ img { display: block; max-width: 100%; }
 /* ═══════════════ FORMS ═══════════════ */
 .form-wrap { max-width: 520px; margin: 0 auto; }
 .form-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  background: #192830;
+  border: 1px solid rgba(116,119,121,0.28);
+  border-radius: 16px;
   padding: 40px 36px;
   backdrop-filter: blur(10px);
 }
@@ -723,7 +764,7 @@ img { display: block; max-width: 100%; }
 }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table thead tr {
-  background: rgba(31,122,92,0.12);
+  background: rgba(116,119,121,0.08);
   border-bottom: 1px solid var(--border);
 }
 .data-table th {
@@ -855,6 +896,15 @@ img { display: block; max-width: 100%; }
   background: rgba(3,34,88,.52);
 }
 .payment-card input { accent-color: var(--grey); }
+.payment-details {
+  padding: 12px 14px;
+  background: rgba(116,119,121,0.08);
+  border-radius: 8px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  transition: var(--transition);
+  animation: fadeIn 0.2s ease;
+}
 
 /* ═══════════════ CHART (CSS bars) ═══════════════ */
 .bar-chart {
