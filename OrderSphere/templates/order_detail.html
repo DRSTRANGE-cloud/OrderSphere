@@ -1,167 +1,362 @@
 ﻿{% extends "base.html" %}
-{% block title %}Order #{{ order.order_id }}  OrderSphere{% endblock %}
+{% block title %} Order {{ format_order_no(order.order_id) }} · OrderSphere{% endblock %}
 {% block content %}
+
+{% set icons = {
+  'Pending':'🛒',
+  'Processing':'⚙️',
+  'Shipped':'📦',
+  'Out_for_Delivery':'🚚',
+  'Delivered':'✅',
+  'Cancelled':'❌'
+} %}
+
 <div class="main-wrap">
 
+  <!-- HEADER -->
   <div class="flex-between" style="margin-bottom:28px;flex-wrap:wrap;gap:12px">
     <div>
       <h1 class="page-title">Order #{{ order.order_id }}</h1>
-      <p class="page-sub">Placed {{ order.ordered_at.strftime('%d %B %Y, %I:%M %p') if order.ordered_at else '' }}</p>
+      <p class="page-sub">
+        Placed {{ order.ordered_at.strftime('%d %B %Y, %I:%M %p') if order.ordered_at else '' }}
+      </p>
     </div>
+
     <div style="display:flex;gap:8px;align-items:center">
       <span class="status-badge st-{{ order.status.lower() }}">
-        {% set icons = {'Pending':'','Processing':'','Shipped':'',
-                        'Out_for_Delivery':'','Delivered':'','Cancelled':''} %}
         {{ icons.get(order.status,'') }} {{ order.status.replace('_',' ') }}
       </span>
-      <a href="/invoice/{{ order.order_id }}" class="btn btn-success btn-sm"> Invoice</a>
+      <a href="/invoice/{{ order.order_id }}" class="btn btn-success btn-sm">Invoice</a>
     </div>
   </div>
 
-  <!-- Progress Tracker -->
-  {% set steps = [('Pending',''),('Processing',''),('Shipped',''),('Out_for_Delivery',''),('Delivered','')] %}
+  <!-- PROGRESS TRACKER -->
+  {% set steps = ['Pending','Processing','Shipped','Out_for_Delivery','Delivered'] %}
   <div class="card mb-24">
     <div class="progress-tracker">
-      {% for status, icon in steps %}
+      {% for status in steps %}
       {% set idx = loop.index0 %}
       <div class="pt-step {% if idx < current_idx %}done{% elif idx == current_idx %}active{% endif %}">
-        <div class="pt-circle">{{ icon }}</div>
+        <div class="pt-circle">{{ icons.get(status) }}</div>
         <div class="pt-label">{{ status.replace('_',' ') }}</div>
       </div>
       {% endfor %}
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start" class="order-layout">
+  <div class="order-layout">
 
-    <!-- Left Column -->
-    <div style="display:flex;flex-direction:column;gap:20px">
+    <!-- LEFT -->
+    <div class="left-col">
 
-      <!-- Items -->
+      <!-- ITEMS -->
       <div class="card">
-        <h3 class="card-title"> Order Items</h3>
+        <h3 class="card-title">Order Items</h3>
+
         {% for item in items %}
-        <div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div class="item-row">
+
           {% if item.image_url %}
-          <img src="{{ item.image_url }}" alt="{{ item.name }}"
-               style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0"/>
+          <img src="{{ item.image_url }}" alt="{{ item.name }}" class="item-img"/>
           {% else %}
-          <div style="width:60px;height:60px;border-radius:8px;background:var(--bg-mid);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0"></div>
+          <div class="item-placeholder">📦</div>
           {% endif %}
-          <div style="flex:1">
-            <a href="/product/{{ item.slug }}" class="fw-700" style="font-size:.9rem">{{ item.name }}</a>
-            <div style="font-size:.82rem;color:var(--text-muted)">&#8377;{{ "%.0f"|format(item.unit_price) }} x {{ item.quantity }}</div>
+
+          <div class="item-info">
+            <a href="/product/{{ item.slug }}" class="fw-700">{{ item.name }}</a>
+            <div class="item-meta">
+              &#8377;{{ "%.0f"|format(item.unit_price) }} × {{ item.quantity }}
+            </div>
           </div>
-          <div class="fw-700 text-accent">&#8377;{{ "%.0f"|format(item.subtotal) }}</div>
+
+          <div class="item-price">
+            &#8377;{{ "%.0f"|format(item.subtotal) }}
+          </div>
+
         </div>
         {% endfor %}
-        <div style="text-align:right;margin-top:16px;font-size:1.1rem;font-weight:800;color:var(--accent)">
+
+        <div class="order-total">
           Total: &#8377;{{ "%.0f"|format(order.total_amount) }}
         </div>
       </div>
 
-      <!-- Status Timeline -->
+      <!-- TIMELINE -->
       <div class="card">
-        <h3 class="card-title"> Tracking Timeline</h3>
+        <h3 class="card-title">Tracking Timeline</h3>
+
         <div class="timeline">
           {% for log in logs %}
           <div class="tl-step">
+
             <div class="tl-dot {% if loop.last %}active{% else %}done{% endif %}">
-              {{ {'Pending':'','Processing':'','Shipped':'','Out_for_Delivery':'','Delivered':'','Cancelled':''}.get(log.status,'') }}
+              {{ icons.get(log.status,'') }}
             </div>
+
             <div class="tl-content">
               <div class="tl-label">{{ log.status.replace('_',' ') }}</div>
-              <div class="tl-time">{{ log.updated_at.strftime('%d %b %Y, %I:%M %p') if log.updated_at else '' }}</div>
-              {% if log.note %}<div class="tl-note">{{ log.note }}</div>{% endif %}
-              {% if log.updated_by %}<div class="tl-note" style="font-size:.74rem">by {{ log.updated_by }}</div>{% endif %}
+              <div class="tl-time">
+                {{ log.updated_at.strftime('%d %b %Y, %I:%M %p') if log.updated_at else '' }}
+              </div>
+
+              {% if log.note %}
+              <div class="tl-note">{{ log.note }}</div>
+              {% endif %}
+
+              {% if log.updated_by %}
+              <div class="tl-note small">by {{ log.updated_by }}</div>
+              {% endif %}
             </div>
+
           </div>
           {% endfor %}
         </div>
+
       </div>
 
     </div>
 
-    <!-- Right Column -->
-    <div style="display:flex;flex-direction:column;gap:16px">
+    <!-- RIGHT -->
+    <div class="right-col">
 
-      <!-- Delivery Info -->
+      <!-- ADDRESS -->
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem"> Delivery Address</h3>
+        <h3 class="card-title small">Delivery Address</h3>
+
         {% if order.line1 %}
-        <div style="font-size:.88rem;color:var(--text-muted);line-height:1.8">
+        <div class="text-muted">
           {{ order.line1 }}<br>
           {% if order.line2 %}{{ order.line2 }}<br>{% endif %}
           {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} - {{ order.pincode }}
         </div>
         {% else %}
-        <p class="text-muted" style="font-size:.85rem">No address on record.</p>
+        <p class="text-muted">No address on record.</p>
         {% endif %}
       </div>
 
-      <!-- Customer -->
+      <!-- CUSTOMER -->
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem"> Customer</h3>
-        <div style="font-size:.88rem;color:var(--text-muted)">
-          <div><strong style="color:var(--text-main)">{{ order.username }}</strong></div>
-          <div>{{ order.email }}</div>
-          {% if order.phone %}<div> {{ order.phone }}</div>{% endif %}
+        <h3 class="card-title small">Customer</h3>
+        <div class="text-muted">
+          <strong>{{ order.username }}</strong><br>
+          {{ order.email }}<br>
+          {% if order.phone %}📞 {{ order.phone }}{% endif %}
         </div>
       </div>
 
-      <!-- Agent -->
+      <!-- AGENT -->
       {% if order.agent_name %}
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem"> Delivery Agent</h3>
-        <div style="font-size:.88rem;color:var(--text-muted)">
-          <strong style="color:var(--text-main)">{{ order.agent_name }}</strong><br>
-          {{ order.vehicle or '' }}  {{ order.zone or '' }}
+        <h3 class="card-title small">Delivery Agent</h3>
+        <div class="text-muted">
+          <strong>{{ order.agent_name }}</strong><br>
+          🚚 {{ order.vehicle or '' }} {{ order.zone or '' }}
         </div>
       </div>
       {% endif %}
 
-      <!-- Admin Controls -->
+      <!-- ADMIN -->
       {% if g_role == 'admin' %}
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem"> Update Order</h3>
+        <h3 class="card-title small">Update Order</h3>
+
         <form method="POST" action="/orders/{{ order.order_id }}/update">
-          <div class="field" style="margin-bottom:12px">
+
+          <div class="field">
             <label>Status</label>
             <select name="status">
               {% for s in ['Pending','Processing','Shipped','Out_for_Delivery','Delivered','Cancelled'] %}
-              <option value="{{ s }}" {% if order.status==s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+              <option value="{{ s }}" {% if order.status==s %}selected{% endif %}>
+                {{ s.replace('_',' ') }}
+              </option>
               {% endfor %}
             </select>
           </div>
-          <div class="field" style="margin-bottom:12px">
+
+          <div class="field">
             <label>Assign Agent</label>
             <select name="agent_id">
               <option value="">- None -</option>
               {% for a in agents %}
-              <option value="{{ a.agent_id }}" {% if order.agent_id and order.agent_id==a.agent_id %}selected{% endif %}>
+              <option value="{{ a.agent_id }}"
+                {% if order.agent_id and order.agent_id==a.agent_id %}selected{% endif %}>
                 {{ a.username }} ({{ a.zone }})
               </option>
               {% endfor %}
             </select>
           </div>
-          <div class="field" style="margin-bottom:14px">
-            <label>Note (optional)</label>
+
+          <div class="field">
+            <label>Note</label>
             <input type="text" name="note" placeholder="e.g. Handed to agent"/>
           </div>
-          <button type="submit" class="btn btn-primary btn-full">Update Order</button>
+
+          <button class="btn btn-primary btn-full">Update Order</button>
         </form>
       </div>
       {% endif %}
 
     </div>
+
   </div>
 </div>
 
+<!-- 🔥 CSS FIXES -->
 <style>
-@media(max-width:900px) {
-  .order-layout { grid-template-columns: 1fr !important; }
+
+.order-layout {
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:24px;
 }
+
+.left-col { display:flex; flex-direction:column; gap:20px; }
+.right-col { display:flex; flex-direction:column; gap:16px; }
+
+.item-row {
+  display:flex;
+  gap:14px;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+
+.item-img {
+  width:60px; height:60px;
+  border-radius:8px;
+  object-fit:cover;
+}
+
+.item-placeholder {
+  width:60px; height:60px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg-mid);
+  border-radius:8px;
+}
+
+.item-info { flex:1; font-size:.9rem; }
+.item-meta { color:var(--text-muted); font-size:.82rem; }
+
+.item-price { font-weight:700; }
+
+.order-total {
+  text-align:right;
+  margin-top:16px;
+  font-weight:800;
+  color:var(--accent);
+}
+
+/* PROGRESS */
+.progress-tracker {
+  display:flex;
+  justify-content:space-between;
+}
+
+.pt-step { text-align:center; flex:1; }
+
+.pt-circle {
+  width:36px; height:36px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  margin:auto;
+}
+
+.pt-step.active .pt-circle {
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+}
+
+.pt-step.done .pt-circle {
+  background:#3b82f6;
+  color:#fff;
+}
+/* TIMELINE CONTAINER */
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-left: 50px; /* space for line + dot */
+}
+
+/* VERTICAL LINE */
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 56px; /* PERFECT CENTER */
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255,255,255,0.12);
+}
+
+/* STEP */
+.tl-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* DOT */
+.tl-dot {
+  position: absolute;
+  left: 8px;
+  top: 20px;
+  transform: translateX(-50%); /* CENTER ALIGN FIX */
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  z-index: 2;
+}
+
+/* STATES */
+.tl-dot.active {
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(139,92,246,0.4);
+}
+
+.tl-dot.done {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* CONTENT */
+.tl-content {
+  margin-left: 55px; /* spacing after dot */
+  font-size: .9rem;
+  line-height: 1.5;
+}
+
+/* TEXT */
+.tl-label {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.tl-time {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.tl-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.small {
+  font-size: .75rem;
+}
+@media(max-width:900px) {
+  .order-layout { grid-template-columns:1fr; }
+}
+
 </style>
+
 {% endblock %}
-
-

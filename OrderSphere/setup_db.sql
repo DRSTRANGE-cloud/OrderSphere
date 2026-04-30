@@ -99,6 +99,9 @@ CREATE TABLE orders (
   ordered_at   DATETIME       DEFAULT CURRENT_TIMESTAMP,
   delivered_at DATETIME,
   notes        TEXT,
+  payment_status VARCHAR(20)  DEFAULT 'PENDING',   -- PENDING, PAID, FAILED
+  payment_id   VARCHAR(100),                       -- Razorpay payment ID
+  razorpay_order_id VARCHAR(100),                  -- Razorpay order ID
   FOREIGN KEY (user_id)    REFERENCES users(user_id)    ON DELETE CASCADE,
   FOREIGN KEY (address_id) REFERENCES addresses(address_id) ON DELETE SET NULL,
   FOREIGN KEY (agent_id)   REFERENCES delivery_agents(agent_id) ON DELETE SET NULL
@@ -107,6 +110,8 @@ CREATE INDEX idx_orders_user      ON orders(user_id);
 CREATE INDEX idx_orders_status    ON orders(status);
 CREATE INDEX idx_orders_agent     ON orders(agent_id);
 CREATE INDEX idx_orders_created   ON orders(ordered_at);
+CREATE INDEX idx_orders_payment_status ON orders(payment_status);
+CREATE INDEX idx_orders_payment_id     ON orders(payment_id);
 
 -- ── 8. ORDER ITEMS ────────────────────────────────────────
 CREATE TABLE order_items (

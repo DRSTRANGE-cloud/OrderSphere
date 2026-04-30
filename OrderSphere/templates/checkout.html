@@ -63,32 +63,28 @@
       </div>
 
       <div class="field">
-        <label>Payment Method</label>
-        <div class="payment-options payment-options-enhanced" data-payment-options>
-          <label class="payment-card">
+        <label class="payment-label">Payment Method</label>
+        <div class="payment-options-clean" data-payment-options>
+          <label class="payment-option-btn">
             <input type="radio" name="payment_method" value="cod" checked>
-            <span>COD</span>
-          </label>
-          <label class="payment-card">
-            <input type="radio" name="payment_method" value="upi">
-            <span>UPI</span>
-          </label>
-          <label class="payment-card">
-            <input type="radio" name="payment_method" value="card">
-            <span>Card</span>
-          </label>
-          <div class="payment-details" data-payment-panel="upi">
-            <input type="text" name="upi_id" placeholder="Enter UPI ID (name@upi)" autocomplete="off">
-            <p class="field-error" data-error-for="upi_id"></p>
-          </div>
-          <div class="payment-details card-fields" data-payment-panel="card">
-            <input type="text" name="card_number" placeholder="Card number" inputmode="numeric" maxlength="19" autocomplete="cc-number">
-            <div class="checkout-field-row">
-              <input type="text" name="card_expiry" placeholder="MM/YY" maxlength="5" autocomplete="cc-exp">
-              <input type="text" name="card_cvv" placeholder="CVV" inputmode="numeric" maxlength="3" autocomplete="cc-csc">
+            <div class="payment-option-content">
+              <span class="payment-icon">🚚</span>
+              <span class="payment-text">
+                <strong>Pay on Delivery</strong>
+                <small>Cash on Delivery (COD)</small>
+              </span>
             </div>
-            <p class="field-error" data-error-for="card"></p>
-          </div>
+          </label>
+          <label class="payment-option-btn">
+            <input type="radio" name="payment_method" value="razorpay">
+            <div class="payment-option-content">
+              <span class="payment-icon">💳</span>
+              <span class="payment-text">
+                <strong>Razorpay</strong>
+                <small>Secure Online Payment</small>
+              </span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -99,16 +95,104 @@
   </form>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+/* ===== PAYMENT SECTION FIX (DARK UI) ===== */
+
+.payment-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #cbd5f5;
+  font-size: 14px;
+}
+
+/* GRID */
+.payment-options-clean {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* CARD */
+.payment-option-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+.payment-option-btn input[type="radio"] {
+  display: none;
+}
+
+.payment-option-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 16px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(15,23,42,0.85);
+
+  color: #e2e8f0;
+
+  transition: all 0.25s ease;
+}
+
+/* HOVER */
+.payment-option-btn:hover .payment-option-content {
+  border-color: #8b5cf6;
+  background: rgba(30,41,59,0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 0 16px rgba(139,92,246,0.25);
+}
+
+/* ACTIVE */
+.payment-option-btn input[type="radio"]:checked + .payment-option-content {
+  border-color: #8b5cf6;
+  background: linear-gradient(
+    135deg,
+    rgba(139,92,246,0.25),
+    rgba(59,130,246,0.2)
+  );
+  box-shadow: 0 0 18px rgba(139,92,246,0.35);
+}
+
+/* ICON */
+.payment-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* TEXT */
+.payment-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-text strong {
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
+.payment-text small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .payment-options-clean {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 <script>
   (function () {
     const form = document.getElementById('checkout-form');
     const submit = document.getElementById('checkout-submit');
-    const cards = Array.from(document.querySelectorAll('.payment-card'));
-    const radios = Array.from(form.querySelectorAll('input[name="payment_method"]'));
-    const panels = Array.from(document.querySelectorAll('[data-payment-panel]'));
-    const fields = ['upi_id', 'card_number', 'card_expiry', 'card_cvv']
-      .map((name) => form.elements[name])
-      .filter(Boolean);
+    const radioButtons = form.querySelectorAll('input[name="payment_method"]');
     const canSubmitAddress = {{ 'true' if addresses else 'false' }};
 
     function currentMethod() {
@@ -116,88 +200,143 @@
       return checked ? checked.value : 'cod';
     }
 
-    function setError(name, message) {
-      const el = document.querySelector(`[data-error-for="${name}"]`);
-      if (el) el.textContent = message || '';
-    }
+    async function startRazorpayPayment(orderId, amount) {
+      try {
+        submit.textContent = '⏳ Opening Payment Gateway...';
+        
+        // Create payment order with Razorpay
+        const createRes = await fetch('/api/create-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_id: orderId, amount: amount })
+        });
 
-    function renderPayment() {
-      const method = currentMethod();
-      cards.forEach((card) => {
-        const input = card.querySelector('input[type="radio"]');
-        card.classList.toggle('is-active', input && input.value === method);
-      });
-      panels.forEach((panel) => {
-        panel.style.display = panel.dataset.paymentPanel === method ? 'grid' : 'none';
-      });
-      updateSubmitState();
-    }
+        if (!createRes.ok) {
+          const error = await createRes.json();
+          alert(`❌ Payment Error: ${error.error || 'Failed to create payment'}`);
+          submit.textContent = 'Place Order';
+          submit.disabled = false;
+          return;
+        }
 
-    function validatePayment(showErrors) {
-      const method = currentMethod();
-      if (showErrors) {
-        setError('upi_id', '');
-        setError('card', '');
+        const paymentData = await createRes.json();
+
+        // Open Razorpay checkout
+        const options = {
+          key: paymentData.key,
+          amount: paymentData.amount,
+          currency: 'INR',
+          name: 'OrderSphere',
+          description: `Payment for Order #${orderId}`,
+          order_id: paymentData.order_id,
+          
+          handler: async function (response) {
+            try {
+              submit.textContent = '✓ Verifying Payment...';
+              
+              // Verify payment on backend
+              const verifyRes = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+
+              if (verifyRes.ok) {
+                const result = await verifyRes.json();
+                if (result.status === 'success') {
+                  // Payment verified successfully
+                  window.location.href = `/orders/${orderId}`;
+                  return;
+                }
+              }
+
+              alert('❌ Payment verification failed. Please try again.');
+              submit.textContent = 'Place Order';
+              submit.disabled = false;
+            } catch (err) {
+              console.error('Payment verification error:', err);
+              alert('❌ Error verifying payment. Please contact support.');
+              submit.textContent = 'Place Order';
+              submit.disabled = false;
+            }
+          },
+          
+          modal: {
+            ondismiss: function () {
+              submit.textContent = 'Place Order';
+              submit.disabled = false;
+            }
+          }
+        };
+
+        new Razorpay(options).open();
+      } catch (err) {
+        console.error('Razorpay error:', err);
+        alert('❌ Failed to open payment gateway.');
+        submit.textContent = 'Place Order';
+        submit.disabled = false;
       }
-
-      if (method === 'upi') {
-        const upi = form.elements.upi_id.value.trim();
-        if (!/^[\w.-]+@[\w]+$/.test(upi)) {
-          if (showErrors) setError('upi_id', 'Enter a valid UPI ID.');
-          return false;
-        }
-      }
-
-      if (method === 'card') {
-        const number = form.elements.card_number.value.replace(/\D/g, '');
-        const expiry = form.elements.card_expiry.value.trim();
-        const cvv = form.elements.card_cvv.value.trim();
-        const expiryMatch = /^(\d{2})\/(\d{2})$/.exec(expiry);
-        const now = new Date();
-
-        if (!/^\d{16}$/.test(number)) {
-          if (showErrors) setError('card', 'Card number must be exactly 16 digits.');
-          return false;
-        }
-        if (!expiryMatch) {
-          if (showErrors) setError('card', 'Expiry must use MM/YY format.');
-          return false;
-        }
-        const month = Number(expiryMatch[1]);
-        const year = 2000 + Number(expiryMatch[2]);
-        if (month < 1 || month > 12 || year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)) {
-          if (showErrors) setError('card', 'Card expiry must be a future date.');
-          return false;
-        }
-        if (!/^\d{3}$/.test(cvv)) {
-          if (showErrors) setError('card', 'CVV must be exactly 3 digits.');
-          return false;
-        }
-      }
-      return true;
     }
 
-    function updateSubmitState() {
-      if (!submit) return;
-      submit.disabled = !canSubmitAddress || !validatePayment(false);
-    }
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
 
-    cards.forEach((card) => card.addEventListener('click', () => setTimeout(renderPayment, 0)));
-    radios.forEach((radio) => radio.addEventListener('change', renderPayment));
-    fields.forEach((field) => field.addEventListener('input', updateSubmitState));
-    form.addEventListener('submit', (event) => {
-      if (!validatePayment(true)) {
-        event.preventDefault();
-        updateSubmitState();
+      if (!canSubmitAddress) {
+        alert('Please add a delivery address first.');
         return;
       }
-      if (form.elements.card_number) {
-        form.elements.card_number.value = form.elements.card_number.value.replace(/\D/g, '');
-      }
-      submit.textContent = 'Placing order...';
+
       submit.disabled = true;
+      const method = currentMethod();
+
+      // For Razorpay, create order first then trigger payment
+      if (method === 'razorpay') {
+        submit.textContent = '⏳ Creating Order...';
+        
+        const formData = new FormData(form);
+        try {
+          const createOrderRes = await fetch('/checkout', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (createOrderRes.redirected) {
+            // Extract order ID from redirect URL
+            const redirectUrl = new URL(createOrderRes.url);
+            const orderIdMatch = redirectUrl.pathname.match(/\/orders\/(\d+)/);
+            
+            if (orderIdMatch) {
+              const orderId = orderIdMatch[1];
+              const amount = {{ total }};
+              await startRazorpayPayment(orderId, amount);
+              return;
+            }
+          } else {
+            const html = await createOrderRes.text();
+            if (html.includes('error') || html.includes('order')) {
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = html;
+              const errorMsg = tempDiv.querySelector('[data-alert-type="error"]')?.textContent || '❌ Failed to create order';
+              alert(errorMsg);
+            }
+          }
+        } catch (err) {
+          console.error('Order creation error:', err);
+          alert('❌ Failed to create order. Please try again.');
+        }
+        
+        submit.textContent = 'Place Order';
+        submit.disabled = false;
+      } else {
+        // For COD, submit normally
+        submit.textContent = '⏳ Placing Order...';
+        form.submit();
+      }
     });
-    renderPayment();
   })();
 </script>
 {% endblock %}

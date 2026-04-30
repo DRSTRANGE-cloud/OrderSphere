@@ -12,12 +12,16 @@ from mysql.connector import pooling
 from functools import wraps
 from datetime import datetime, timedelta
 from decimal import Decimal
+from datetime import datetime
 import json
 import re
 import hmac
 import os
 import smtplib
 from email.message import EmailMessage
+import razorpay
+import hashlib
+import base64
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -58,6 +62,16 @@ def get_db():
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
+# ═══════════════════════════════════════════════════
+#  RAZORPAY PAYMENT GATEWAY
+# ═══════════════════════════════════════════════════
+razorpay_client = razorpay.Client(
+    auth=(
+        os.getenv('RAZORPAY_KEY_ID', ''),
+        os.getenv('RAZORPAY_KEY_SECRET', '')
+    )
+)
+
 NATURE_CATEGORIES = [
     ('Fresh Flowers', 'fresh-flowers'),
     ('Bouquets', 'bouquets'),
@@ -96,6 +110,22 @@ demo_auth_repaired = False
 # 
 #  DECORATORS
 # 
+SECRET_SALT = "ordersphere_secret"
+
+def encode_order_id(order_id: int) -> str:
+    raw = f"{order_id}:{SECRET_SALT}"
+    return "OS-" + base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+def decode_order_id(encoded: str) -> int:
+    payload = encoded.replace("OS-", "")
+    decoded = base64.urlsafe_b64decode(payload + "==").decode()
+    oid, _ = decoded.split(":")
+    return int(oid)
+app.jinja_env.globals.update(encode_order_id=encode_order_id)
+def format_order_no(order_id):
+    return f"OS-{datetime.now().year}-{order_id:06d}"
+
+app.jinja_env.globals.update(format_order_no=format_order_no)
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -784,46 +814,29 @@ def update_cart(cid):
     return redirect('/cart')
 
 def normalize_payment_method(raw_method):
+    """Normalize payment method to supported types: COD or RAZORPAY"""
     methods = {
         'cod': 'COD',
         'cash': 'COD',
         'COD': 'COD',
-        'upi': 'UPI',
-        'UPI': 'UPI',
-        'card': 'Card',
-        'Card': 'Card',
+        'razorpay': 'RAZORPAY',
+        'Razorpay': 'RAZORPAY',
+        'RAZORPAY': 'RAZORPAY',
     }
     return methods.get(raw_method, 'COD')
 
 def validate_payment_details(form):
+    """Validate payment method. Only COD and RAZORPAY are supported."""
     method = normalize_payment_method(form.get('payment_method', 'cod'))
 
     if method == 'COD':
-        return method, 'Payment: COD', None
-
-    if method == 'UPI':
-        upi_id = (form.get('upi_id') or '').strip()
-        if not re.match(r'^[\w.-]+@[\w]+$', upi_id):
-            return method, '', 'Enter a valid UPI ID like name@upi.'
-        return method, f'Payment: UPI ({upi_id})', None
-
-    card_number = re.sub(r'\D', '', form.get('card_number') or '')
-    card_expiry = (form.get('card_expiry') or '').strip()
-    card_cvv = (form.get('card_cvv') or '').strip()
-
-    if not re.match(r'^\d{16}$', card_number):
-        return method, '', 'Card number must be exactly 16 digits.'
-    if not re.match(r'^\d{2}/\d{2}$', card_expiry):
-        return method, '', 'Card expiry must use MM/YY format.'
-    month = int(card_expiry[:2])
-    year = 2000 + int(card_expiry[3:])
-    now = datetime.now()
-    if month < 1 or month > 12 or (year, month) < (now.year, now.month):
-        return method, '', 'Card expiry must be a future date.'
-    if not re.match(r'^\d{3}$', card_cvv):
-        return method, '', 'CVV must be exactly 3 digits.'
-
-    return method, f'Payment: Card (Card ends in {card_number[-4:]})', None
+        return method, 'Payment: Cash on Delivery (COD)', None
+    
+    if method == 'RAZORPAY':
+        return method, 'Payment: Razorpay Online Payment', None
+    
+    # Default to COD if method not recognized
+    return 'COD', 'Payment: Cash on Delivery (COD)', None
 
 def load_checkout_context(uid, source='cart', product_id=None, quantity=1):
     conn = get_db()
@@ -1898,6 +1911,141 @@ def api_analytics():
     cur.close(); conn.close()
     return jsonify(revenue=float(r['revenue']))
 
+# ═══════════════════════════════════════════════════════
+#  RAZORPAY PAYMENT API ENDPOINTS
+# ═══════════════════════════════════════════════════════
+
+@app.route('/api/create-payment', methods=['POST'])
+@login_required
+def create_payment():
+    """
+    Create a Razorpay order for an existing order.
+    Expected POST JSON: { order_id, amount }
+    """
+    try:
+        data = request.get_json()
+        order_id = data.get('order_id')
+        amount = data.get('amount')
+        
+        if not order_id or not amount:
+            return jsonify({'error': 'Missing order_id or amount'}), 400
+        
+        # Verify order exists and belongs to user
+        uid = session['user_id']
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+        
+        cur.execute(
+            "SELECT order_id, total_amount FROM orders WHERE order_id=%s AND user_id=%s",
+            (order_id, uid)
+        )
+        order = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+        
+        # Convert amount to paise (Razorpay uses smallest currency unit)
+        amount_paise = int(float(amount) * 100)
+        
+        # Create Razorpay order
+        razorpay_order = razorpay_client.order.create({
+            'amount': amount_paise,
+            'currency': 'INR',
+            'receipt': f'order_{order_id}_{uid}',
+            'notes': {
+                'order_id': order_id,
+                'user_id': uid
+            }
+        })
+        
+        # Store Razorpay order ID in database
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE orders SET razorpay_order_id=%s WHERE order_id=%s",
+            (razorpay_order['id'], order_id)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({
+            'order_id': razorpay_order['id'],
+            'amount': amount_paise,
+            'key': os.getenv('RAZORPAY_KEY_ID')
+        }), 200
+        
+    except Exception as e:
+        print(f"Error creating payment: {e}")
+        return jsonify({'error': 'Failed to create payment order'}), 500
+
+
+@app.route('/api/verify-payment', methods=['POST'])
+@login_required
+def verify_payment():
+    """
+    Verify Razorpay payment signature and update order status.
+    Expected POST JSON: { razorpay_order_id, razorpay_payment_id, razorpay_signature }
+    """
+    try:
+        data = request.get_json()
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_signature = data.get('razorpay_signature')
+        
+        if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+            return jsonify({'error': 'Missing payment data'}), 400
+        
+        # Verify signature
+        key_secret = os.getenv('RAZORPAY_KEY_SECRET')
+        message = f"{razorpay_order_id}|{razorpay_payment_id}"
+        expected_signature = hmac.new(
+            key_secret.encode(),
+            message.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if not hmac.compare_digest(expected_signature, razorpay_signature):
+            return jsonify({'error': 'Payment verification failed'}), 400
+        
+        # Update order with payment details
+        uid = session['user_id']
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+        
+        try:
+            cur.execute("""
+                UPDATE orders 
+                SET payment_status='PAID', payment_id=%s
+                WHERE razorpay_order_id=%s AND user_id=%s
+            """, (razorpay_payment_id, razorpay_order_id, uid))
+            
+            conn.commit()
+            
+            # Get order details for logging
+            cur.execute(
+                "SELECT order_id FROM orders WHERE razorpay_order_id=%s",
+                (razorpay_order_id,)
+            )
+            order = cur.fetchone()
+            
+            if order:
+                log_status(order['order_id'], 'Processing', 
+                          f'Payment verified: {razorpay_payment_id}', uid)
+                notify(uid, f"Payment for Order #{order['order_id']} confirmed.", "success")
+            
+            return jsonify({'status': 'success', 'message': 'Payment verified'}), 200
+            
+        finally:
+            cur.close()
+            conn.close()
+            
+    except Exception as e:
+        print(f"Error verifying payment: {e}")
+        return jsonify({'error': 'Payment verification failed'}), 500
+
 # 
 #  ERROR HANDLERS
 # 
@@ -1912,4 +2060,3 @@ def not_found(e):
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False') == 'True'
     app.run(debug=debug_mode, threaded=True)   # threaded=True  handles concurrent users
-
