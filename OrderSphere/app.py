@@ -764,19 +764,18 @@ def place_order(pid):
     uid = session['user_id']
     qty = 1
 
-    conn = get_db(); cur = conn.cursor(dictionary=True)
-    
-    cur.execute("SELECT address_id FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC LIMIT 1", (uid,))
-    address = cur.fetchone()
-    if not address:
-        flash("Add a delivery address before using Buy Now.", "warning")
-        cur.close(); conn.close()
-        return redirect('/addresses')
-
+    conn = get_db()
+    cur = None
     try:
-        # START TRANSACTION with strict isolation
-        conn.start_transaction(isolation_level='SERIALIZABLE')
+        conn.autocommit = False
+        cur = conn.cursor(dictionary=True)
         
+        cur.execute("SELECT address_id FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC LIMIT 1", (uid,))
+        address = cur.fetchone()
+        if not address:
+            conn.rollback()
+            return redirect('/addresses')
+
         # Lock product row and verify stock
         cur.execute(
             "SELECT product_id, stock, name, slug, price FROM products WHERE product_id=%s AND is_active=1 FOR UPDATE",
@@ -785,13 +784,11 @@ def place_order(pid):
 
         if not product:
             conn.rollback()
-            cur.close(); conn.close()
             flash("Product not found or is unavailable.", "error")
             return redirect('/')
 
         if product['stock'] < qty:
             conn.rollback()
-            cur.close(); conn.close()
             flash(f"'{product['name']}' is out of stock.", "error")
             return redirect(f"/product/{product['slug']}")
 
@@ -818,12 +815,17 @@ def place_order(pid):
         flash(f"Order #{order_id} placed successfully.", "success")
         return redirect(f'/orders/{order_id}')
     except Exception as e:
-        conn.rollback()
+        if conn:
+            conn.rollback()
         print(f"Buy Now error: {e}")
         flash("Failed to place order. Please try again.", "error")
         return redirect(f"/product/{product.get('slug', '/')}" if 'product' in locals() else "/")
     finally:
-        cur.close(); conn.close()
+        if cur:
+            cur.close()
+        conn.close()
+        if conn:
+            conn.autocommit = True
 
 # ═══════════════════════════════════════════════════════════
 #  CHECKOUT & PLACE ORDER
@@ -846,26 +848,27 @@ def checkout():
         card_num = request.form.get('card_number', '').strip()
         if card_num: payment_details = f" (Card ends in {card_num[-4:]})"
 
-    conn = get_db(); cur = conn.cursor(dictionary=True)
-
-    # Load cart
-    cur.execute("""
-        SELECT c.quantity, p.product_id, p.name, p.price
-        FROM cart c JOIN products p ON c.product_id=p.product_id
-        WHERE c.user_id=%s
-    """, (uid,))
-    cart_items = cur.fetchall()
-
-    if not cart_items:
-        flash("Your cart is empty.", "error")
-        cur.close(); conn.close()
-        return redirect('/cart')
-
-    total = sum(float(i['price']) * i['quantity'] for i in cart_items)
-
+    conn = get_db()
+    cur = None
+    cur2 = None
     try:
-        # START TRANSACTION with strict isolation
-        conn.start_transaction(isolation_level='SERIALIZABLE')
+        conn.autocommit = False
+        cur = conn.cursor(dictionary=True)
+
+        # Load cart
+        cur.execute("""
+            SELECT c.quantity, p.product_id, p.name, p.price
+            FROM cart c JOIN products p ON c.product_id=p.product_id
+            WHERE c.user_id=%s
+        """, (uid,))
+        cart_items = cur.fetchall()
+
+        if not cart_items:
+            flash("Your cart is empty.", "error")
+            return redirect('/cart')
+
+        total = sum(float(i['price']) * i['quantity'] for i in cart_items)
+
         cur2 = conn.cursor(dictionary=True)
 
         # Lock and verify stock for ALL items (atomic check)
@@ -883,7 +886,6 @@ def checkout():
             prod = locked_products.get(item['product_id'])
             if not prod or prod['stock'] < item['quantity']:
                 conn.rollback()
-                cur2.close(); cur.close(); conn.close()
                 prod_name = prod['name'] if prod else 'Product'
                 flash(f"❌ '{prod_name}' insufficient stock ({prod['stock'] if prod else 0} available, {item['quantity']} requested).", "error")
                 return redirect('/cart')
@@ -914,16 +916,22 @@ def checkout():
         log_status(order_id, 'Pending', 'Order placed by customer', uid)
         notify(uid, f"Order #{order_id} placed successfully! 🎉", "success")
 
-        cur2.close(); cur.close(); conn.close()
         flash(f"Order #{order_id} placed! 🎉", "success")
         return redirect(f'/orders/{order_id}')
 
     except Exception as e:
-        conn.rollback()
-        cur2.close(); cur.close(); conn.close()
+        if conn:
+            conn.rollback()
         flash("Failed to place order. Please try again.", "error")
         print(f"Checkout error: {e}")
-        return redirect('/cart')
+    finally:
+        if cur2:
+            cur2.close()
+        if cur:
+            cur.close()
+        conn.close()
+        if conn:
+            conn.autocommit = True
 
 # ═══════════════════════════════════════════════════════════
 #  ORDERS
