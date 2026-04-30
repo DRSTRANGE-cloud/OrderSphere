@@ -1,147 +1,31 @@
-﻿/* OrderSphere responsive guardrails. Core visual tokens live in style.css. */
-
-html {
-  scroll-behavior: smooth;
-}
+/* Responsive guardrails. Visual authority lives in style.css. */
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-img, video, iframe, svg {
-  max-width: 100%;
+html {
+  scroll-behavior: smooth;
 }
 
-button,
-a,
-input,
-select,
-textarea {
-  min-height: 40px;
-}
-
-.table-wrap,
-.data-table {
+img,
+video,
+iframe,
+svg {
   max-width: 100%;
 }
 
 .table-wrap {
+  max-width: 100%;
   overflow-x: auto;
 }
 
-@media (max-width: 1024px) {
-  .admin-layout {
-    display: block;
-  }
-
-  .admin-layout .sidebar,
-  .sidebar {
-    position: static;
-    width: 100%;
-    height: auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-    gap: 8px;
-    padding: 12px 16px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-title,
-  .sidebar-divider {
-    display: none;
-  }
-
-  .admin-content {
-    margin-left: 0;
-    width: min(100% - 32px, 1180px);
-    padding: 20px 0 64px;
-  }
-
-  .charts-row,
-  .admin-two-col {
-    grid-template-columns: 1fr !important;
-  }
-}
-
 @media (max-width: 768px) {
-  .nav-inner {
-    padding: 0 16px;
-    gap: 10px;
-  }
-
-  .nav-search {
-    display: none;
-  }
-
-  .nav-links {
-    gap: 4px;
-  }
-
-  .nav-link {
-    display: none;
-  }
-
-  .main-wrap,
-  .back-row,
-  .alert-bar {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .kpi-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  .cart-layout,
-  .checkout-grid,
-  .pd-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .cart-item,
-  .checkout-item {
-    grid-template-columns: 64px minmax(0, 1fr);
-  }
-
-  .cart-item > div:last-child,
-  .checkout-item > strong {
-    grid-column: 2;
-    align-items: flex-start !important;
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 40px;
   }
 }
-
-@media (max-width: 520px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .page-title {
-    font-size: 1.45rem;
-  }
-
-  .filter-bar,
-  .flex-between,
-  .form-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .checkout-field-row,
-  .field-row {
-    grid-template-columns: 1fr;
-  }
-
-  .btn,
-  .btn-sm,
-  .btn-lg {
-    width: 100%;
-    justify-content: center;
-    white-space: normal;
-  }
-}
-

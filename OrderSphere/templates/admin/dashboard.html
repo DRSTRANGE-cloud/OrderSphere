@@ -1,21 +1,7 @@
 ﻿{% extends "base.html" %}
 {% block title %}Admin Dashboard - OrderSphere{% endblock %}
 {% block content %}
-<div class="admin-layout">
-  <aside class="sidebar" role="navigation" aria-label="Admin navigation">
-    <div class="sidebar-title">Main</div>
-    <a href="/admin/dashboard" class="sidebar-link active"><span class="sl-icon">01</span> Dashboard</a>
-    <a href="/orders" class="sidebar-link"><span class="sl-icon">02</span> All Orders</a>
-    <a href="/admin/products" class="sidebar-link"><span class="sl-icon">03</span> Products</a>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-title">People</div>
-    <a href="/admin/users" class="sidebar-link"><span class="sl-icon">04</span> Users</a>
-    <a href="/admin/agents" class="sidebar-link"><span class="sl-icon">05</span> Delivery Agents</a>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-title">Reports</div>
-    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">06</span> Analytics</a>
-  </aside>
-
+<div class="main-wrap admin-page">
   <div class="admin-content">
     <div class="page-header flex-between">
       <div>
@@ -25,7 +11,7 @@
       <a href="/admin/product/add" class="btn btn-primary">Add Product</a>
     </div>
 
-    <div class="kpi-grid stagger">
+    <div class="dashboard-stats stagger">
       <div class="kpi-card fade-up">
         <div class="kpi-val">{{ total_orders }}</div>
         <div class="kpi-label">Total Orders</div>
@@ -47,14 +33,10 @@
         <div class="kpi-label">SLA Breaches</div>
         {% if sla_breaches > 0 %}<div class="kpi-sub" style="color:#f87171">Orders over 48h undelivered</div>{% endif %}
       </div>
-      <div class="kpi-card fade-up">
-        <div class="kpi-val">{{ avg_delivery }}h</div>
-        <div class="kpi-label">Avg Delivery Time</div>
-      </div>
     </div>
 
-    <div class="charts-row" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px">
-      <div class="card fade-in">
+    <div class="dashboard-main-grid">
+      <div class="card fade-in graph-card">
         <h3 class="card-title">Orders - Last 7 Days</h3>
         {% set chart_days = daily[-7:] %}
         {% if chart_days %}
@@ -104,7 +86,7 @@
         {% endif %}
       </div>
 
-      <div class="card fade-in">
+      <div class="card fade-in status-card">
         <h3 class="card-title">Order Status</h3>
         {% set colors = {'Pending':'#fbbf24','Processing':'#38bdf8','Shipped':'#c084fc','Out_for_Delivery':'#fb923c','Delivered':'#3b82f6','Cancelled':'#f87171'} %}
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -127,7 +109,7 @@
       </div>
     </div>
 
-    <div class="admin-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="dashboard-bottom-grid">
       <div class="card fade-in">
         <h3 class="card-title">Top Products</h3>
         <div class="table-wrap" style="border:none;border-radius:0">
@@ -176,4 +158,5 @@
   </div>
 </div>
 {% endblock %}
+
 

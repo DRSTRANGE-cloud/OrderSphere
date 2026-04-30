@@ -67,20 +67,20 @@
         <div class="payment-options payment-options-enhanced" data-payment-options>
           <label class="payment-card">
             <input type="radio" name="payment_method" value="cod" checked>
-            <span>Cash on Delivery</span>
+            <span>COD</span>
           </label>
           <label class="payment-card">
             <input type="radio" name="payment_method" value="upi">
             <span>UPI</span>
           </label>
+          <label class="payment-card">
+            <input type="radio" name="payment_method" value="card">
+            <span>Card</span>
+          </label>
           <div class="payment-details" data-payment-panel="upi">
             <input type="text" name="upi_id" placeholder="Enter UPI ID (name@upi)" autocomplete="off">
             <p class="field-error" data-error-for="upi_id"></p>
           </div>
-          <label class="payment-card">
-            <input type="radio" name="payment_method" value="card">
-            <span>Debit / Credit Card</span>
-          </label>
           <div class="payment-details card-fields" data-payment-panel="card">
             <input type="text" name="card_number" placeholder="Card number" inputmode="numeric" maxlength="19" autocomplete="cc-number">
             <div class="checkout-field-row">

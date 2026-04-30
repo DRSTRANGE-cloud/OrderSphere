@@ -28,40 +28,34 @@
       OrderSphere
     </a>
 
-    {% if g_role == 'customer' %}
     <form class="nav-search" method="GET" action="/" role="search" aria-label="Search products">
-      <span class="search-icon">Search</span>
+      <span class="search-icon" aria-hidden="true">Search</span>
       <input type="search" name="q" placeholder="Search products..." value="{{ request.args.get('q','') }}" aria-label="Search"/>
     </form>
-    <div class="nav-links">
+
+    <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-links" id="navMenu">
       <a href="/" class="nav-link">Products</a>
-      <a href="/dashboard" class="nav-link">Dashboard</a>
-      <a href="/orders" class="nav-link">My Orders</a>
-      <a href="/addresses" class="nav-link">Addresses</a>
+      {% if g_role == 'admin' %}
+      <a href="/admin/dashboard" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Dashboard</a>
+      {% endif %}
+      <a href="/orders" class="nav-link {% if request.endpoint == 'orders' %}active{% endif %}">Orders</a>
+      {% if g_role == 'admin' %}
+      <a href="/admin/users" class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">Users</a>
+      <a href="/admin/agents" class="nav-link {% if request.endpoint == 'admin_agents' %}active{% endif %}">Agents</a>
+      {% elif g_role == 'customer' %}
+      <a href="/dashboard" class="nav-link {% if request.endpoint == 'customer_dashboard' %}active{% endif %}">Account</a>
+      {% elif g_role == 'delivery_agent' %}
+      <a href="/agent/dashboard" class="nav-link {% if request.endpoint == 'agent_dashboard' %}active{% endif %}">Dashboard</a>
+      {% endif %}
+      {% if g_role == 'customer' %}
       <a href="/cart" class="nav-icon-btn" title="Cart" aria-label="Shopping cart">
         Cart
         {% if g_cart > 0 %}<span class="badge">{{ g_cart }}</span>{% endif %}
       </a>
-      <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
-        Alerts
-        {% if g_unread > 0 %}<span class="badge" id="notif-badge">{{ g_unread }}</span>{% endif %}
-        <span class="notif-popover">
-          <strong>Notifications</strong>
-          <small>{{ g_unread }} unread update{{ '' if g_unread == 1 else 's' }}</small>
-        </span>
-      </a>
-      <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
-        {{ g_username[0].upper() if g_username else '?' }}
-      </div>
-      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">Logout</a>
-    </div>
-    {% else %}
-    <div class="nav-links" style="margin-left:auto;">
-      {% if g_role == 'admin' %}
-      <span class="nav-link active">Admin</span>
-      {% elif g_role == 'delivery_agent' %}
-      <a href="/agent/dashboard" class="nav-link {% if request.endpoint == 'agent_dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="/orders" class="nav-link {% if request.endpoint == 'orders' %}active{% endif %}">Orders</a>
       {% endif %}
       <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
         Alerts
@@ -74,9 +68,8 @@
       <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
         {{ g_username[0].upper() if g_username else '?' }}
       </div>
-      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">Logout</a>
+      <a href="/logout" class="btn btn-sm nav-logout">Logout</a>
     </div>
-    {% endif %}
   </div>
 </nav>
 {% endif %}
@@ -134,17 +127,19 @@
   });
 
   document.addEventListener('DOMContentLoaded', function() {
-    const menuBtn = document.querySelector('.mobile-menu-btn');
-    const nav = document.querySelector('.main-nav');
+    const menuBtn = document.querySelector('.nav-toggle');
+    const nav = document.getElementById('navMenu');
     if (menuBtn && nav) {
       menuBtn.addEventListener('click', function() {
-        menuBtn.classList.toggle('active');
-        nav.classList.toggle('active');
+        const isOpen = nav.classList.toggle('is-open');
+        menuBtn.classList.toggle('is-active', isOpen);
+        menuBtn.setAttribute('aria-expanded', String(isOpen));
       });
       document.addEventListener('click', function(e) {
         if (!menuBtn.contains(e.target) && !nav.contains(e.target)) {
-          menuBtn.classList.remove('active');
-          nav.classList.remove('active');
+          menuBtn.classList.remove('is-active');
+          nav.classList.remove('is-open');
+          menuBtn.setAttribute('aria-expanded', 'false');
         }
       });
     }

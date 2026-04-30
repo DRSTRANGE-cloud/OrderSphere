@@ -1,20 +1,8 @@
 ﻿{% extends "base.html" %}
 {% block title %}Analytics - OrderSphere{% endblock %}
 {% block content %}
-<div class="admin-layout">
-  <aside class="sidebar">
-    <div class="sidebar-title">Main</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">01</span> Dashboard</a>
-    <a href="/orders" class="sidebar-link"><span class="sl-icon">02</span> All Orders</a>
-    <a href="/admin/products" class="sidebar-link"><span class="sl-icon">03</span> Products</a>
-    <div class="sidebar-divider"></div>
-    <a href="/admin/users" class="sidebar-link"><span class="sl-icon">04</span> Users</a>
-    <a href="/admin/agents" class="sidebar-link"><span class="sl-icon">05</span> Agents</a>
-    <div class="sidebar-divider"></div>
-    <a href="/admin/analytics" class="sidebar-link active"><span class="sl-icon">06</span> Analytics</a>
-  </aside>
-
-  <div class="admin-content">
+<div class="main-wrap admin-page">
+<div class="admin-content">
     <div class="page-header">
       <h1 class="page-title">Analytics</h1>
       <p class="page-sub">Last 30 days performance overview</p>
@@ -82,7 +70,7 @@
               <span class="text-accent fw-700">{{ p.sold }} sold</span>
             </div>
             <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
-              <div style="height:100%;width:{{ pct }}%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px"></div>
+              <div style="height:100%;width:{{ pct }}%;background:var(--primary);border-radius:4px"></div>
             </div>
             <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px">&#8377;{{ "%.0f"|format(p.revenue|float) }} revenue &middot; {{ p.category or 'N/A' }}</div>
           </div>
@@ -158,4 +146,6 @@
   </div>
 </div>
 {% endblock %}
+
+
 

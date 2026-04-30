@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Bell, Eye, EyeOff, Lock, Mail, PackageCheck, Search, ShoppingCart, User } from 'lucide-react';
-import { api, Product } from '@/lib/api';
+import { api, Product } from '@/api';
 
 type Me = { user: null | { username: string; email: string; role: string } };
 
@@ -35,7 +35,7 @@ export default function Home() {
   if (!me) {
     return (
       <main className="grid min-h-screen lg:grid-cols-2">
-        <section className="relative flex items-center justify-center overflow-hidden bg-[linear-gradient(135deg,rgba(3,34,88,.86),rgba(42,28,51,.82)),url('https://images.unsplash.com/photo-1468327768560-75b778cbb551?w=1400&q=80')] bg-cover bg-center p-8 text-center">
+        <section className="relative flex items-center justify-center overflow-hidden bg-[#020617] bg-cover bg-center p-8 text-center">
           <div className="max-w-xl card-enter">
             <img src="/logo.png" alt="OrderSphere" className="mx-auto mb-8 w-72 rounded-2xl bg-white shadow-2xl" />
             <h1 className="text-4xl font-black leading-tight tracking-normal md:text-6xl">Nature commerce, delivered with calm precision.</h1>
@@ -60,7 +60,7 @@ export default function Home() {
               </button>
             </div>
             {error && <p className="mb-4 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
-            <button className="w-full rounded-xl bg-gradient-to-r from-grey to-midnightViolet px-5 py-3 font-black text-white shadow-lg shadow-black/30 transition hover:scale-[1.01] active:scale-[.98]">
+            <button className="w-full rounded-xl bg-[#3b82f6] px-5 py-3 font-black text-white shadow-lg shadow-black/30 transition hover:scale-[1.01] active:scale-[.98]">
               {mode === 'login' ? 'Sign in' : 'Create account'}
             </button>
           </form>
