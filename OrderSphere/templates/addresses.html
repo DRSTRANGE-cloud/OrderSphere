@@ -1,9 +1,9 @@
-{% extends "base.html" %}
-{% block title %}My Addresses · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}My Addresses  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
   <div class="page-header">
-    <h1 class="page-title">📍 My Addresses</h1>
+    <h1 class="page-title"> My Addresses</h1>
     <p class="page-sub">Manage your delivery addresses</p>
   </div>
 
@@ -27,14 +27,14 @@
         </div>
         <div style="font-size:.88rem;color:var(--text-muted);line-height:1.8">
           {{ a.line1 }}{% if a.line2 %}, {{ a.line2 }}{% endif %}<br>
-          {{ a.city }}{% if a.state %}, {{ a.state }}{% endif %} — {{ a.pincode }}
+          {{ a.city }}{% if a.state %}, {{ a.state }}{% endif %}  {{ a.pincode }}
         </div>
       </div>
       {% else %}
       <div class="empty-state" style="padding:40px 20px">
-        <div class="empty-icon">📍</div>
+        <div class="empty-icon"></div>
         <p class="empty-title">No addresses saved</p>
-        <p class="empty-sub">Add your first delivery address →</p>
+        <p class="empty-sub">Add your first delivery address </p>
       </div>
       {% endfor %}
     </div>
@@ -88,3 +88,4 @@
   </div>
 </div>
 {% endblock %}
+

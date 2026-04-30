@@ -5,15 +5,13 @@
 html { scroll-behavior: smooth; }
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 14% 0%, rgba(116,119,121,.18), transparent 26%),
-    linear-gradient(135deg, #141515, #192830 52%, #032258);
-  color: #e6f4ea;
+  background: #020617;
+  color: #e2e8f0;
 }
 
 .glass {
-  background: rgba(25, 40, 48, .72);
-  border: 1px solid rgba(167, 232, 189, .18);
+  background: rgba(15, 23, 42, .82);
+  border: 1px solid rgba(255, 255, 255, .05);
   box-shadow: 0 24px 80px rgba(0,0,0,.26);
   backdrop-filter: blur(18px);
 }

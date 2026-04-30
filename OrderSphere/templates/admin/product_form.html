@@ -1,21 +1,20 @@
-{% extends "base.html" %}
-{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product  OrderSphere{% endblock %}
 {% block content %}
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="sidebar-title">Main</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
-    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
-    <a href="/admin/products"  class="sidebar-link active"><span class="sl-icon">🛍️</span> Products</a>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon"></span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon"></span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link active"><span class="sl-icon"></span> Products</a>
     <div class="sidebar-divider"></div>
-    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
-    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon">🚚</span> Agents</a>
+    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon"></span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon"></span> Agents</a>
     <div class="sidebar-divider"></div>
-    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon"></span> Analytics</a>
   </aside>
 
   <div class="admin-content">
-    <a href="/admin/products" class="back-link">← Back to Products</a>
     <h1 class="page-title" style="margin-top:12px">
       {% if product %}Edit Product{% else %}Add New Product{% endif %}
     </h1>
@@ -31,7 +30,7 @@
             <div class="field">
               <label>Category</label>
               <select name="cat_id">
-                <option value="">— Select Category —</option>
+                <option value="">- Select Category -</option>
                 {% for cat in categories %}
                 <option value="{{ cat.cat_id }}" {% if product and product.cat_id==cat.cat_id %}selected{% endif %}>
                   {{ cat.name }}
@@ -43,12 +42,12 @@
 
           <div class="field">
             <label>Description</label>
-            <textarea name="description" rows="4" placeholder="Product description…">{{ product.description if product else '' }}</textarea>
+            <textarea name="description" rows="4" placeholder="Product description">{{ product.description if product else '' }}</textarea>
           </div>
 
           <div class="field-row">
             <div class="field">
-              <label>Price (₹) *</label>
+              <label>Price (&#8377;) *</label>
               <input type="number" name="price" step="0.01" min="0"
                      value="{{ product.price if product else '' }}" required/>
             </div>
@@ -85,3 +84,5 @@
   </div>
 </div>
 {% endblock %}
+
+

@@ -1,18 +1,18 @@
-{% extends "base.html" %}
-{% block title %}Users · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Users  OrderSphere{% endblock %}
 {% block content %}
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="sidebar-title">Main</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
-    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
-    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon">🛍️</span> Products</a>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon"></span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon"></span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon"></span> Products</a>
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">People</div>
-    <a href="/admin/users"     class="sidebar-link active"><span class="sl-icon">👥</span> Users</a>
-    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon">🚚</span> Agents</a>
+    <a href="/admin/users"     class="sidebar-link active"><span class="sl-icon"></span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link"><span class="sl-icon"></span> Agents</a>
     <div class="sidebar-divider"></div>
-    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon"></span> Analytics</a>
   </aside>
 
   <div class="admin-content">
@@ -50,7 +50,7 @@
               </div>
             </td>
             <td class="text-muted" style="font-size:.85rem">{{ u.email }}</td>
-            <td class="text-muted" style="font-size:.85rem">{{ u.phone or '—' }}</td>
+            <td class="text-muted" style="font-size:.85rem">{{ u.phone or '' }}</td>
             <td>
               {% set role_colors = {'admin':'#fbbf24','customer':'#d7d9dc','delivery_agent':'#38bdf8'} %}
               <span class="status-badge" style="background:rgba(255,255,255,.05);color:{{ role_colors.get(u.role_name,'#aaa') }};border-color:rgba(255,255,255,.1)">
@@ -66,7 +66,7 @@
               {% endif %}
             </td>
             <td class="text-muted" style="font-size:.8rem">
-              {{ u.created_at.strftime('%d %b %Y') if u.created_at else '—' }}
+              {{ u.created_at.strftime('%d %b %Y') if u.created_at else '' }}
             </td>
             <td>
               {% if u.user_id != session.user_id %}
@@ -95,3 +95,4 @@
   </div>
 </div>
 {% endblock %}
+

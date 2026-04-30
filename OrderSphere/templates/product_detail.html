@@ -1,20 +1,17 @@
-{% extends "base.html" %}
-{% block title %}{{ product.name }} · OrderSphere{% endblock %}
-{% block meta_desc %}{{ product.description[:120] if product.description else product.name }} — Buy on OrderSphere.{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}{{ product.name }} - OrderSphere{% endblock %}
+{% block meta_desc %}{{ product.description[:120] if product.description else product.name }} - Buy on OrderSphere.{% endblock %}
 {% block og_title %}{{ product.name }}{% endblock %}
 {% block og_desc %}{{ product.description[:120] if product.description else '' }}{% endblock %}
 
 {% block content %}
 <div class="main-wrap">
-  <a href="/" class="back-link">← Back to Products</a>
-
-  <!-- Product Main -->
   <div class="pd-layout fade-in">
     <div class="pd-img-wrap">
       {% if product.image_url %}
       <img src="{{ product.image_url }}" alt="{{ product.name }}"/>
       {% else %}
-      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem">🛒</div>
+      <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:.9rem">No image</div>
       {% endif %}
     </div>
 
@@ -25,60 +22,66 @@
       {% if avg_rating %}
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
         <span style="color:#fbbf24;font-size:1.1rem">
-          {% for i in range(1,6) %}{{ '★' if i <= avg_rating|round else '☆' }}{% endfor %}
+          {% for i in range(1,6) %}{{ '*' if i <= avg_rating|round else '-' }}{% endfor %}
         </span>
-        <span style="color:var(--text-muted);font-size:.88rem">{{ avg_rating }} · {{ reviews|length }} review(s)</span>
+        <span style="color:var(--text-muted);font-size:.88rem">{{ avg_rating }} &middot; {{ reviews|length }} review(s)</span>
       </div>
       {% endif %}
 
-      <div class="pd-price">₹{{ "%.0f"|format(product.price) }}</div>
+      <div class="pd-price">&#8377;{{ "%.0f"|format(product.price) }}</div>
       <p class="pd-desc">{{ product.description or 'No description available.' }}</p>
 
       <div class="pd-stock">
         {% if product.stock > 10 %}
-        <span class="stock-ok">✅ In Stock ({{ product.stock }} units)</span>
+        <span class="stock-ok">In Stock ({{ product.stock }} units)</span>
         {% elif product.stock > 0 %}
-        <span class="stock-low">⚠️ Only {{ product.stock }} left!</span>
+        <span class="stock-low">Only {{ product.stock }} left</span>
         {% else %}
-        <span class="stock-none">❌ Out of Stock</span>
+        <span class="stock-none">Out of Stock</span>
         {% endif %}
       </div>
 
       {% if product.stock > 0 %}
       <form method="POST" action="/cart/add/{{ product.product_id }}" style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
-        <div class="field" style="margin:0;width:80px">
+        <div class="field" style="margin:0;width:90px">
           <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="text-align:center"/>
         </div>
-        <button type="submit" class="btn btn-primary btn-lg">🛒 Add to Cart</button>
+        <button type="submit" class="btn btn-primary btn-lg">Add to Cart</button>
       </form>
-      <a href="/order/place/{{ product.product_id }}" class="btn btn-outline">⚡ Buy Now</a>
+      <form method="GET" action="/checkout" style="display:flex;gap:10px;align-items:center">
+        <input type="hidden" name="buy_now" value="true"/>
+        <input type="hidden" name="product_id" value="{{ product.product_id }}"/>
+        <div class="field" style="margin:0;width:90px">
+          <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" style="text-align:center"/>
+        </div>
+        <button type="submit" class="btn btn-outline btn-lg">Buy Now</button>
+      </form>
       {% else %}
       <button class="btn btn-outline btn-lg" disabled>Out of Stock</button>
       {% endif %}
 
       <div class="divider"></div>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--text-muted)">
-        <span>🚚 Free delivery on orders above ₹999</span>
-        <span>↩️ 7-day easy returns</span>
-        <span>🔒 Secure checkout</span>
+        <span>Free delivery on orders above &#8377;999</span>
+        <span>7-day easy returns</span>
+        <span>Secure checkout</span>
       </div>
     </div>
   </div>
 
-  <!-- Reviews Section -->
   <div class="card mb-24">
-    <h2 class="card-title">⭐ Customer Reviews</h2>
+    <h2 class="card-title">Customer Reviews</h2>
 
     <form method="POST" action="/product/{{ product.product_id }}/review" style="margin-bottom:24px">
       <p style="font-size:.88rem;font-weight:600;margin-bottom:10px;color:var(--text-muted)">Leave a Review</p>
       <div style="display:flex;gap:4px;margin-bottom:12px" id="star-row">
         {% for i in range(1,6) %}
-        <label class="star-input" data-val="{{ i }}" title="{{ i }} star">★</label>
+        <label class="star-input" data-val="{{ i }}" title="{{ i }} star">*</label>
         {% endfor %}
         <input type="hidden" name="rating" id="rating-input" value="5" required/>
       </div>
       <div class="field">
-        <textarea name="comment" rows="3" placeholder="Share your experience with this product…"></textarea>
+        <textarea name="comment" rows="3" placeholder="Share your experience with this product..."></textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
     </form>
@@ -86,14 +89,14 @@
     {% if reviews %}
     <div style="display:flex;flex-direction:column;gap:16px">
       {% for r in reviews %}
-      <div style="padding:16px;background:rgba(116,119,121,.08);border:1px solid var(--border);border-radius:10px">
+      <div style="padding:16px;background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:8px">
         <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">
           <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">
             {{ r.username[0].upper() }}
           </div>
           <div>
             <strong style="font-size:.9rem">{{ r.username }}</strong>
-            <div style="color:#fbbf24;font-size:.85rem">{{ '★'*r.rating }}{{ '☆'*(5-r.rating) }}</div>
+            <div style="color:#fbbf24;font-size:.85rem">{{ '*' * r.rating }}{{ '-' * (5-r.rating) }}</div>
           </div>
           <span style="margin-left:auto;font-size:.76rem;color:var(--text-muted)">
             {{ r.reviewed_at.strftime('%d %b %Y') if r.reviewed_at else '' }}
@@ -104,11 +107,10 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-muted" style="font-size:.88rem">No reviews yet. Be the first!</p>
+    <p class="text-muted" style="font-size:.88rem">No reviews yet. Be the first.</p>
     {% endif %}
   </div>
 
-  <!-- Related Products -->
   {% if related %}
   <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">You may also like</h2>
   <div class="product-grid stagger">
@@ -116,20 +118,19 @@
     <a href="/product/{{ p.slug }}" class="product-card fade-up" style="text-decoration:none;color:inherit">
       <div class="product-img-wrap">
         {% if p.image_url %}<img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy"/>
-        {% else %}<div class="product-img-placeholder">🛒</div>{% endif %}
+        {% else %}<div class="product-img-placeholder">No image</div>{% endif %}
       </div>
       <div class="product-body">
         <h3 class="product-name">{{ p.name }}</h3>
         <div class="product-footer">
-          <span class="product-price">₹{{ "%.0f"|format(p.price) }}</span>
-          {% if p.avg_rating > 0 %}<span class="product-rating">⭐ {{ "%.1f"|format(p.avg_rating) }}</span>{% endif %}
+          <span class="product-price">&#8377;{{ "%.0f"|format(p.price) }}</span>
+          {% if p.avg_rating > 0 %}<span class="product-rating">{{ "%.1f"|format(p.avg_rating) }} star</span>{% endif %}
         </div>
       </div>
     </a>
     {% endfor %}
   </div>
   {% endif %}
-
 </div>
 
 <script>
@@ -141,9 +142,10 @@
   }
   renderStars(5);
   stars.forEach((s,i) => {
-    s.addEventListener('click', () => { selected = i+1; input.value=selected; renderStars(selected); });
-    s.addEventListener('mouseenter', () => renderStars(i+1));
+    s.addEventListener('click', () => { selected = i + 1; input.value = selected; renderStars(selected); });
+    s.addEventListener('mouseenter', () => renderStars(i + 1));
     s.addEventListener('mouseleave', () => renderStars(selected));
   });
 </script>
 {% endblock %}
+

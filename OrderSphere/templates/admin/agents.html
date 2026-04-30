@@ -1,23 +1,23 @@
-{% extends "base.html" %}
-{% block title %}Delivery Agents · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Delivery Agents  OrderSphere{% endblock %}
 {% block content %}
 <div class="admin-layout">
   <aside class="sidebar">
     <div class="sidebar-title">Main</div>
-    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon">📊</span> Dashboard</a>
-    <a href="/orders"          class="sidebar-link"><span class="sl-icon">📦</span> All Orders</a>
-    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon">🛍️</span> Products</a>
+    <a href="/admin/dashboard" class="sidebar-link"><span class="sl-icon"></span> Dashboard</a>
+    <a href="/orders"          class="sidebar-link"><span class="sl-icon"></span> All Orders</a>
+    <a href="/admin/products"  class="sidebar-link"><span class="sl-icon"></span> Products</a>
     <div class="sidebar-divider"></div>
     <div class="sidebar-title">People</div>
-    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon">👥</span> Users</a>
-    <a href="/admin/agents"    class="sidebar-link active"><span class="sl-icon">🚚</span> Agents</a>
+    <a href="/admin/users"     class="sidebar-link"><span class="sl-icon"></span> Users</a>
+    <a href="/admin/agents"    class="sidebar-link active"><span class="sl-icon"></span> Agents</a>
     <div class="sidebar-divider"></div>
-    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon">📈</span> Analytics</a>
+    <a href="/admin/analytics" class="sidebar-link"><span class="sl-icon"></span> Analytics</a>
   </aside>
 
   <div class="admin-content">
     <div class="page-header">
-      <h1 class="page-title">🚚 Delivery Agents</h1>
+      <h1 class="page-title"> Delivery Agents</h1>
       <p class="page-sub">{{ agents|length }} agents registered</p>
     </div>
 
@@ -48,9 +48,9 @@
               </div>
             </td>
             <td class="text-muted" style="font-size:.85rem">{{ a.email }}</td>
-            <td class="text-muted" style="font-size:.85rem">{{ a.phone or '—' }}</td>
-            <td style="font-size:.85rem">{{ a.vehicle or '—' }}</td>
-            <td style="font-size:.85rem">{{ a.zone or '—' }}</td>
+            <td class="text-muted" style="font-size:.85rem">{{ a.phone or '' }}</td>
+            <td style="font-size:.85rem">{{ a.vehicle or '' }}</td>
+            <td style="font-size:.85rem">{{ a.zone or '' }}</td>
             <td>
               <span class="fw-700" style="color:{% if a.assigned_orders > 0 %}var(--warning){% else %}var(--success){% endif %}">
                 {{ a.assigned_orders }}
@@ -71,3 +71,4 @@
   </div>
 </div>
 {% endblock %}
+

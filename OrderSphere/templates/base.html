@@ -1,138 +1,114 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <!-- SEO Meta -->
-  <title>{% block title %}OrderSphere — Intelligent Order Management{% endblock %}</title>
+  <title>{% block title %}OrderSphere - Intelligent Order Management{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}OrderSphere is a modern order tracking and fulfillment management platform for growing businesses.{% endblock %}"/>
   <meta name="keywords" content="order tracking, delivery management, logistics, e-commerce, fulfillment"/>
   <meta name="robots" content="index, follow"/>
-  <meta name="theme-color" content="#141515"/>
-
-  <!-- Open Graph -->
-  <meta property="og:type"        content="website"/>
-  <meta property="og:title"       content="{% block og_title %}OrderSphere{% endblock %}"/>
+  <meta name="theme-color" content="#020617"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="{% block og_title %}OrderSphere{% endblock %}"/>
   <meta property="og:description" content="{% block og_desc %}Intelligent Order & Fulfillment Platform{% endblock %}"/>
-  <meta property="og:image"       content="/static/img/og-cover.png"/>
-
-  <!-- Canonical -->
+  <meta property="og:image" content="/static/img/og-cover.png"/>
   <link rel="canonical" href="{{ request.url }}"/>
-
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-
-<!-- ── NAVBAR ─────────────────────────────────────────── -->
 {% if session.user_id %}
 <nav class="navbar" role="navigation" aria-label="Main navigation">
   <div class="nav-inner">
     <a class="nav-brand" href="/" aria-label="OrderSphere home">
       <img src="{{ url_for('static', filename='img/ordersphere-logo.png') }}" alt="" class="nav-logo">
-    OrderSphere
+      OrderSphere
     </a>
 
     {% if g_role == 'customer' %}
     <form class="nav-search" method="GET" action="/" role="search" aria-label="Search products">
-      <span class="search-icon">🔍</span>
-      <input type="search" name="q" placeholder="Search products…"
-             value="{{ request.args.get('q','') }}" aria-label="Search"/>
+      <span class="search-icon">Search</span>
+      <input type="search" name="q" placeholder="Search products..." value="{{ request.args.get('q','') }}" aria-label="Search"/>
     </form>
-    
     <div class="nav-links">
-      <a href="/"          class="nav-link">Products</a>
+      <a href="/" class="nav-link">Products</a>
       <a href="/dashboard" class="nav-link">Dashboard</a>
-      <a href="/orders"    class="nav-link">My Orders</a>
+      <a href="/orders" class="nav-link">My Orders</a>
       <a href="/addresses" class="nav-link">Addresses</a>
-
-      <!-- Cart (customers only) -->
       <a href="/cart" class="nav-icon-btn" title="Cart" aria-label="Shopping cart">
-        🛒
+        Cart
         {% if g_cart > 0 %}<span class="badge">{{ g_cart }}</span>{% endif %}
       </a>
-
-      <!-- Notifications -->
       <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
-        🔔
+        Alerts
         {% if g_unread > 0 %}<span class="badge" id="notif-badge">{{ g_unread }}</span>{% endif %}
         <span class="notif-popover">
           <strong>Notifications</strong>
           <small>{{ g_unread }} unread update{{ '' if g_unread == 1 else 's' }}</small>
         </span>
       </a>
-
-      <!-- User Avatar -->
       <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
         {{ g_username[0].upper() if g_username else '?' }}
       </div>
-
-      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">
-        Logout
-      </a>
+      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">Logout</a>
     </div>
     {% else %}
-    <!-- Admin and Agent: minimal navbar -->
-    <div class="nav-links" style="margin-left: auto;">
-      <!-- Notifications -->
+    <div class="nav-links" style="margin-left:auto;">
+      {% if g_role == 'admin' %}
+      <span class="nav-link active">Admin</span>
+      {% elif g_role == 'delivery_agent' %}
+      <a href="/agent/dashboard" class="nav-link {% if request.endpoint == 'agent_dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="/orders" class="nav-link {% if request.endpoint == 'orders' %}active{% endif %}">Orders</a>
+      {% endif %}
       <a href="/notifications" class="nav-icon-btn notif-trigger" title="Notifications" aria-label="Notifications">
-        🔔
+        Alerts
         {% if g_unread > 0 %}<span class="badge" id="notif-badge">{{ g_unread }}</span>{% endif %}
         <span class="notif-popover">
           <strong>Notifications</strong>
           <small>{{ g_unread }} unread update{{ '' if g_unread == 1 else 's' }}</small>
         </span>
       </a>
-
-      <!-- User Avatar -->
       <div class="nav-avatar" title="{{ g_username }} ({{ g_role }})">
         {{ g_username[0].upper() if g_username else '?' }}
       </div>
-
-      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">
-        Logout
-      </a>
+      <a href="/logout" class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);">Logout</a>
     </div>
     {% endif %}
   </div>
 </nav>
 {% endif %}
 
-<!-- ── ALERTS ─────────────────────────────────────────── -->
-{% if session.user_id %}
-<button class="page-back-btn" type="button" onclick="history.length > 1 ? history.back() : window.location.href='/'" aria-label="Go back">Back</button>
+{% set hide_back_endpoints = ['index', 'customer_dashboard', 'admin_dashboard', 'agent_dashboard'] %}
+{% if session.user_id and g_role == 'customer' and request.endpoint not in hide_back_endpoints %}
+<div class="back-row">
+  <button class="back-btn" type="button" onclick="if (document.referrer && document.referrer !== window.location.href) { history.back(); } else { window.location.href='/' }" aria-label="Go back">&larr; Back</button>
+</div>
 {% endif %}
 
 <div class="alert-bar" role="alert" aria-live="polite">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for cat, msg in messages %}
-      <div class="alert alert-{{ cat }}" style="margin-top:12px; position:relative; padding-right:36px;">
-        {{ '✅' if cat=='success' else ('❌' if cat=='error' else '⚠️') }} {{ msg }}
-        <button onclick="this.parentElement.style.display='none'" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:inherit; font-size:1.2rem; cursor:pointer;">&times;</button>
+      <div class="alert alert-{{ cat }}" style="margin-top:12px;position:relative;padding-right:36px;">
+        {{ msg }}
+        <button onclick="this.parentElement.style.display='none'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:inherit;font-size:1.2rem;cursor:pointer;">&times;</button>
       </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 </div>
 
-<!-- ── MAIN CONTENT ───────────────────────────────────── -->
 <main id="main-content">
   {% block content %}{% endblock %}
 </main>
 
 <footer class="footer" role="contentinfo">
-  <p>© 2024 <strong style="color:var(--accent)">OrderSphere</strong> · Built with Flask & MySQL · Real-time logistics made simple</p>
+  <p>&copy; 2024 <strong style="color:var(--accent)">OrderSphere</strong> &middot; Built with Flask &amp; MySQL &middot; Real-time logistics made simple</p>
 </footer>
 
-<!-- Notification badge live update -->
 <script>
   (function() {
     const badge = document.getElementById('notif-badge');
@@ -153,11 +129,38 @@
 
   document.querySelectorAll('img').forEach((img) => {
     img.addEventListener('error', () => {
-      img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%232a1c33'/%3E%3Ccircle cx='300' cy='190' r='58' fill='%23192830' stroke='%23747779' stroke-width='3'/%3E%3Cpath d='M270 202c38-58 84-71 113-57-4 40-32 78-88 81 18-18 27-36 31-55-22 16-40 36-56 67-17-15-31-39-30-67 19 5 34 15 45 31z' fill='%23d7d9dc'/%3E%3Ctext x='300' y='300' text-anchor='middle' font-family='Inter,Arial' font-size='24' fill='%23a7adb2'%3EOrderSphere%3C/text%3E%3C/svg%3E";
+      img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23020617'/%3E%3Ccircle cx='300' cy='190' r='58' fill='%230f172a' stroke='%233b82f6' stroke-width='3'/%3E%3Cpath d='M270 202c38-58 84-71 113-57-4 40-32 78-88 81 18-18 27-36 31-55-22 16-40 36-56 67-17-15-31-39-30-67 19 5 34 15 45 31z' fill='%238b5cf6'/%3E%3Ctext x='300' y='300' text-anchor='middle' font-family='Inter,Arial' font-size='24' fill='%23e2e8f0'%3EOrderSphere%3C/text%3E%3C/svg%3E";
     }, { once: true });
   });
-</script>
 
+  document.addEventListener('DOMContentLoaded', function() {
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    const nav = document.querySelector('.main-nav');
+    if (menuBtn && nav) {
+      menuBtn.addEventListener('click', function() {
+        menuBtn.classList.toggle('active');
+        nav.classList.toggle('active');
+      });
+      document.addEventListener('click', function(e) {
+        if (!menuBtn.contains(e.target) && !nav.contains(e.target)) {
+          menuBtn.classList.remove('active');
+          nav.classList.remove('active');
+        }
+      });
+    }
+
+    window.showToast = function(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    };
+  });
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
+

@@ -1,5 +1,5 @@
-"""
-OrderSphere — Intelligent Order & Fulfillment Management Platform
+﻿"""
+OrderSphere  Intelligent Order & Fulfillment Management Platform
 Flask + MySQL 8.0  |  Production-ready MVP
 """
 
@@ -27,9 +27,9 @@ except ImportError:
 if load_dotenv:
     load_dotenv()
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  APP CONFIG
-# ═══════════════════════════════════════════════════════════
+# 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'ordersphere_ultra_secret_2024_xyz')
 app.config['SESSION_COOKIE_HTTPONLY'] = os.getenv('SESSION_COOKIE_HTTPONLY', 'True') == 'True'
@@ -38,7 +38,7 @@ app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT', 'orde
 app.config['VERIFY_TOKEN_MAX_AGE'] = int(os.getenv('VERIFY_TOKEN_MAX_AGE', 86400))
 app.config['RESET_TOKEN_MAX_AGE'] = int(os.getenv('RESET_TOKEN_MAX_AGE', 1800))
 
-# ─── Connection Pool (handles concurrent users) ──────────
+#  Connection Pool (handles concurrent users) 
 db_pool = pooling.MySQLConnectionPool(
     pool_name="ordersphere_pool",
     pool_size=10,                        # 10 concurrent connections
@@ -50,6 +50,7 @@ db_pool = pooling.MySQLConnectionPool(
     charset=os.getenv('DB_CHARSET', 'utf8mb4'),
     use_unicode=True
 )
+
 
 def get_db():
     """Get a connection from the pool."""
@@ -92,9 +93,9 @@ NATURE_PRODUCTS = [
 catalog_synced = False
 demo_auth_repaired = False
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  DECORATORS
-# ═══════════════════════════════════════════════════════════
+# 
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -120,9 +121,9 @@ def agent_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  HELPERS
-# ═══════════════════════════════════════════════════════════
+# 
 def notify(user_id, message, ntype='info'):
     """Insert a notification for a user."""
     try:
@@ -325,7 +326,7 @@ def emit_email(to_email, subject, link):
     if not gmail_user or not gmail_password:
         # Development mode: print to console
         print("\n" + "="*70)
-        print(f"📧 EMAIL (Console Mode - Gmail not configured)")
+        print(f" EMAIL (Console Mode - Gmail not configured)")
         print(f"To: {to_email}")
         print(f"Subject: {subject}")
         print("-"*70)
@@ -349,7 +350,7 @@ def emit_email(to_email, subject, link):
             smtp.send_message(msg)
         return True
     except Exception as e:
-        print(f"❌ Email send failed: {e}")
+        print(f" Email send failed: {e}")
         return False
 
 def login_user(user, remember=False):
@@ -370,7 +371,7 @@ def cart_count(user_id):
     except Exception:
         return 0
 
-# ─── Template context ───────────────────────────────────
+#  Template context 
 @app.context_processor
 def inject_globals():
     uid = session.get('user_id')
@@ -383,9 +384,9 @@ def inject_globals():
         )
     return dict(g_unread=0, g_cart=0, g_role='', g_username='')
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  AUTH
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/login', methods=['GET','POST'])
 def login():
     repair_demo_accounts()
@@ -416,7 +417,7 @@ def login():
 
         # Login the user
         login_user(user, remember)
-        flash(f"Welcome back, {user['username']}! 👋", "success")
+        flash(f"Welcome back, {user['username']}! ", "success")
         
         # Role-based redirect
         if user['role_name'] == 'admin':
@@ -454,7 +455,7 @@ def signup():
             token = build_token(email, 'verify')
             verify_link = url_for('verify_email', token=token, _external=True)
             sent = emit_email(email, 'Verify your OrderSphere account', verify_link)
-            notify(uid, "Welcome to OrderSphere 🎉 Verify your email to start ordering.", "success")
+            notify(uid, "Welcome to OrderSphere  Verify your email to start ordering.", "success")
             flash("Account created! Check your email for verification link." if sent else
                   "Account created! Email verification link will be printed to console.", "success")
             return redirect('/login')
@@ -528,9 +529,9 @@ def logout():
     session.clear()
     return redirect('/login')
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  DASHBOARD / HOME
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/')
 @login_required
 def index():
@@ -604,9 +605,9 @@ def index():
         search=search, cat_id=cat_id, sort_by=sort_by
     )
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  CUSTOMER DASHBOARD
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/dashboard')
 @login_required
 def customer_dashboard():
@@ -647,9 +648,9 @@ def customer_dashboard():
         recent_orders=recent_orders
     )
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  PRODUCT DETAIL
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/product/<slug>')
 @login_required
 def product_detail(slug):
@@ -690,9 +691,9 @@ def product_detail(slug):
         avg_rating=avg_rating, related=related
     )
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  CART
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/cart')
 @login_required
 def view_cart():
@@ -715,11 +716,19 @@ def view_cart():
 @login_required
 def add_to_cart(pid):
     uid = session['user_id']
-    qty = int(request.form.get('quantity', 1))
-    conn = get_db(); cur = conn.cursor()
-    cur.execute("SELECT stock FROM products WHERE product_id=%s", (pid,))
+    try:
+        qty = max(1, int(request.form.get('quantity', 1)))
+    except (TypeError, ValueError):
+        qty = 1
+    conn = get_db(); cur = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT p.stock, COALESCE(c.quantity, 0) AS cart_quantity
+        FROM products p
+        LEFT JOIN cart c ON c.product_id=p.product_id AND c.user_id=%s
+        WHERE p.product_id=%s AND p.is_active=1
+    """, (uid, pid))
     row = cur.fetchone()
-    if not row or row[0] < qty:
+    if not row or int(row['cart_quantity']) + qty > int(row['stock']):
         flash("Insufficient stock.", "error")
         cur.close(); conn.close()
         return redirect(request.referrer or '/')
@@ -730,7 +739,7 @@ def add_to_cart(pid):
     """, (uid, pid, qty, qty))
     conn.commit()
     cur.close(); conn.close()
-    flash("Added to cart! 🛒", "success")
+    flash("Added to cart! ", "success")
     return redirect(request.referrer or '/')
 
 @app.route('/cart/remove/<int:cid>')
@@ -746,196 +755,267 @@ def remove_from_cart(cid):
 @app.route('/cart/update/<int:cid>', methods=['POST'])
 @login_required
 def update_cart(cid):
-    qty = int(request.form.get('quantity', 1))
+    try:
+        qty = int(request.form.get('quantity', 1))
+    except (TypeError, ValueError):
+        qty = 1
     uid = session['user_id']
-    conn = get_db(); cur = conn.cursor()
+    conn = get_db(); cur = conn.cursor(dictionary=True)
     if qty < 1:
         cur.execute("DELETE FROM cart WHERE cart_id=%s AND user_id=%s", (cid, uid))
     else:
+        cur.execute("""
+            SELECT p.stock
+            FROM cart c JOIN products p ON c.product_id=p.product_id
+            WHERE c.cart_id=%s AND c.user_id=%s AND p.is_active=1
+        """, (cid, uid))
+        row = cur.fetchone()
+        if not row:
+            flash("Cart item is no longer available.", "error")
+            cur.close(); conn.close()
+            return redirect('/cart')
+        if qty > int(row['stock']):
+            flash(f"Only {row['stock']} unit(s) are available.", "error")
+            cur.close(); conn.close()
+            return redirect('/cart')
         cur.execute("UPDATE cart SET quantity=%s WHERE cart_id=%s AND user_id=%s", (qty, cid, uid))
     conn.commit()
     cur.close(); conn.close()
     return redirect('/cart')
 
-@app.route('/order/place/<int:pid>')
-@login_required
-def place_order(pid):
-    """Buy Now: create a one-item order and redirect to tracking."""
-    uid = session['user_id']
-    qty = 1
+def normalize_payment_method(raw_method):
+    methods = {
+        'cod': 'COD',
+        'cash': 'COD',
+        'COD': 'COD',
+        'upi': 'UPI',
+        'UPI': 'UPI',
+        'card': 'Card',
+        'Card': 'Card',
+    }
+    return methods.get(raw_method, 'COD')
 
+def validate_payment_details(form):
+    method = normalize_payment_method(form.get('payment_method', 'cod'))
+
+    if method == 'COD':
+        return method, 'Payment: COD', None
+
+    if method == 'UPI':
+        upi_id = (form.get('upi_id') or '').strip()
+        if not re.match(r'^[\w.-]+@[\w]+$', upi_id):
+            return method, '', 'Enter a valid UPI ID like name@upi.'
+        return method, f'Payment: UPI ({upi_id})', None
+
+    card_number = re.sub(r'\D', '', form.get('card_number') or '')
+    card_expiry = (form.get('card_expiry') or '').strip()
+    card_cvv = (form.get('card_cvv') or '').strip()
+
+    if not re.match(r'^\d{16}$', card_number):
+        return method, '', 'Card number must be exactly 16 digits.'
+    if not re.match(r'^\d{2}/\d{2}$', card_expiry):
+        return method, '', 'Card expiry must use MM/YY format.'
+    month = int(card_expiry[:2])
+    year = 2000 + int(card_expiry[3:])
+    now = datetime.now()
+    if month < 1 or month > 12 or (year, month) < (now.year, now.month):
+        return method, '', 'Card expiry must be a future date.'
+    if not re.match(r'^\d{3}$', card_cvv):
+        return method, '', 'CVV must be exactly 3 digits.'
+
+    return method, f'Payment: Card (Card ends in {card_number[-4:]})', None
+
+def load_checkout_context(uid, source='cart', product_id=None, quantity=1):
     conn = get_db()
-    cur = None
+    cur = conn.cursor(dictionary=True)
     try:
-        conn.autocommit = False
-        cur = conn.cursor(dictionary=True)
-        
-        cur.execute("SELECT address_id FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC LIMIT 1", (uid,))
-        address = cur.fetchone()
-        if not address:
-            conn.rollback()
-            return redirect('/addresses')
+        if source == 'buy_now':
+            cur.execute("""
+                SELECT product_id, name, price, image_url, stock,
+                       %s AS quantity, (%s * price) AS subtotal
+                FROM products
+                WHERE product_id=%s AND is_active=1
+            """, (quantity, quantity, product_id))
+            item = cur.fetchone()
+            items = [item] if item else []
+        else:
+            cur.execute("""
+                SELECT c.quantity, p.product_id, p.name, p.price,
+                       p.image_url, p.stock, (c.quantity * p.price) AS subtotal
+                FROM cart c JOIN products p ON c.product_id=p.product_id
+                WHERE c.user_id=%s
+            """, (uid,))
+            items = cur.fetchall()
 
-        # Lock product row and verify stock
-        cur.execute(
-            "SELECT product_id, stock, name, slug, price FROM products WHERE product_id=%s AND is_active=1 FOR UPDATE",
-            (pid,))
-        product = cur.fetchone()
-
-        if not product:
-            conn.rollback()
-            flash("Product not found or is unavailable.", "error")
-            return redirect('/')
-
-        if product['stock'] < qty:
-            conn.rollback()
-            flash(f"'{product['name']}' is out of stock.", "error")
-            return redirect(f"/product/{product['slug']}")
-
-        # All checks passed - create order atomically
-        total = float(product['price']) * qty
-        cur.execute("""
-            INSERT INTO orders (user_id, address_id, status, total_amount, notes)
-            VALUES (%s,%s,'Pending',%s,%s)
-        """, (uid, address['address_id'], total, 'Buy Now - Payment: COD'))
-        order_id = cur.lastrowid
-        
-        cur.execute("""
-            INSERT INTO order_items (order_id,product_id,quantity,unit_price)
-            VALUES (%s,%s,%s,%s)
-        """, (order_id, product['product_id'], qty, product['price']))
-        
-        cur.execute("UPDATE products SET stock = stock - %s WHERE product_id=%s", (qty, product['product_id']))
-        
-        # COMMIT transaction (atomic)
-        conn.commit()
-        
-        log_status(order_id, 'Pending', 'Buy Now order placed by customer', uid)
-        notify(uid, f"Order #{order_id} placed successfully.", "success")
-        flash(f"Order #{order_id} placed successfully.", "success")
-        return redirect(f'/orders/{order_id}')
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print(f"Buy Now error: {e}")
-        flash("Failed to place order. Please try again.", "error")
-        return redirect(f"/product/{product.get('slug', '/')}" if 'product' in locals() else "/")
+        total = sum(float(i['subtotal']) for i in items)
+        cur.execute("SELECT * FROM addresses WHERE user_id=%s ORDER BY is_default DESC, address_id ASC", (uid,))
+        addresses = cur.fetchall()
+        return items, total, addresses
     finally:
-        if cur:
-            cur.close()
+        cur.close()
         conn.close()
-        if conn:
-            conn.autocommit = True
 
-# ═══════════════════════════════════════════════════════════
-#  CHECKOUT & PLACE ORDER
-# ═══════════════════════════════════════════════════════════
-@app.route('/checkout', methods=['POST'])
-@login_required
-def checkout():
-    uid        = session['user_id']
-    address_id = request.form.get('address_id')
-    notes      = request.form.get('notes','').strip()
-    payment_method = request.form.get('payment_method', 'COD')
-    if payment_method not in ('COD', 'UPI', 'Card'):
-        payment_method = 'COD'
-    
-    payment_details = ""
-    if payment_method == 'UPI':
-        upi_id = request.form.get('upi_id', '').strip()
-        if upi_id: payment_details = f" (UPI: {upi_id})"
-    elif payment_method == 'Card':
-        card_num = request.form.get('card_number', '').strip()
-        if card_num: payment_details = f" (Card ends in {card_num[-4:]})"
-
-    conn = get_db()
+def create_order_from_items(uid, items, address_id, payment_note, customer_notes='', clear_cart=False):
+    conn = None
     cur = None
-    cur2 = None
     try:
-        conn.autocommit = False
-        cur = conn.cursor(dictionary=True)
+        conn = get_db()
+        cur = conn.cursor(dictionary=True, buffered=True)
+        if not conn.in_transaction:
+            conn.start_transaction()
 
-        # Load cart
-        cur.execute("""
-            SELECT c.quantity, p.product_id, p.name, p.price
-            FROM cart c JOIN products p ON c.product_id=p.product_id
-            WHERE c.user_id=%s
-        """, (uid,))
-        cart_items = cur.fetchall()
+        if not items:
+            conn.rollback()
+            return None, 'There are no items to checkout.'
+        if not address_id:
+            conn.rollback()
+            return None, 'Please add a delivery address before placing your order.'
+        cur.execute(
+            "SELECT address_id FROM addresses WHERE address_id=%s AND user_id=%s",
+            (address_id, uid)
+        )
+        if not cur.fetchone():
+            conn.rollback()
+            return None, 'Select a valid delivery address.'
 
-        if not cart_items:
-            flash("Your cart is empty.", "error")
-            return redirect('/cart')
-
-        total = sum(float(i['price']) * i['quantity'] for i in cart_items)
-
-        cur2 = conn.cursor(dictionary=True)
-
-        # Lock and verify stock for ALL items (atomic check)
-        product_ids = [item['product_id'] for item in cart_items]
-        placeholders = ",".join(["%s"] * len(product_ids))
-        cur2.execute(f"""
-            SELECT product_id, stock, name FROM products 
-            WHERE product_id IN ({placeholders})
-            FOR UPDATE
-        """, product_ids)
-        locked_products = {row['product_id']: row for row in cur2.fetchall()}
-
-        # Validate ALL items have sufficient stock (no partial orders)
-        for item in cart_items:
-            prod = locked_products.get(item['product_id'])
-            if not prod or prod['stock'] < item['quantity']:
+        total = 0
+        locked_items = []
+        for item in items:
+            product_id = int(item['product_id'])
+            quantity = max(1, int(item['quantity']))
+            cur.execute(
+                "SELECT stock, name, price FROM products WHERE product_id = %s AND is_active=1 FOR UPDATE",
+                (product_id,)
+            )
+            product = cur.fetchone()
+            if not product:
                 conn.rollback()
-                prod_name = prod['name'] if prod else 'Product'
-                flash(f"❌ '{prod_name}' insufficient stock ({prod['stock'] if prod else 0} available, {item['quantity']} requested).", "error")
-                return redirect('/cart')
+                return None, 'One of the selected products is no longer available.'
+            if int(product['stock']) < quantity:
+                conn.rollback()
+                return None, f"'{product['name']}' has only {product['stock']} in stock."
+            locked_items.append({
+                'product_id': product_id,
+                'quantity': quantity,
+                'unit_price': product['price'],
+            })
+            total += float(product['price']) * quantity
 
-        # All items validated - proceed with order
-        cur2.execute("""
+        notes = payment_note + (f" | {customer_notes}" if customer_notes else "")
+        cur.execute("""
             INSERT INTO orders (user_id, address_id, status, total_amount, notes)
             VALUES (%s,%s,'Pending',%s,%s)
-        """, (uid, address_id or None, total, f"Payment: {payment_method}{payment_details}" + (f" | {notes}" if notes else "")))
-        order_id = cur2.lastrowid
+        """, (uid, address_id, total, notes))
+        order_id = cur.lastrowid
 
-        # Insert items & atomically reduce stock
-        for item in cart_items:
-            cur2.execute("""
+        for item in locked_items:
+            cur.execute("""
                 INSERT INTO order_items (order_id,product_id,quantity,unit_price)
                 VALUES (%s,%s,%s,%s)
-            """, (order_id, item['product_id'], item['quantity'], item['price']))
-            cur2.execute(
+            """, (order_id, item['product_id'], item['quantity'], item['unit_price']))
+            cur.execute(
                 "UPDATE products SET stock = stock - %s WHERE product_id=%s",
-                (item['quantity'], item['product_id']))
+                (item['quantity'], item['product_id'])
+            )
 
-        # Clear cart
-        cur2.execute("DELETE FROM cart WHERE user_id=%s", (uid,))
+        if clear_cart:
+            cur.execute("DELETE FROM cart WHERE user_id=%s", (uid,))
 
-        # COMMIT transaction (atomic: all or nothing)
         conn.commit()
-
-        log_status(order_id, 'Pending', 'Order placed by customer', uid)
-        notify(uid, f"Order #{order_id} placed successfully! 🎉", "success")
-
-        flash(f"Order #{order_id} placed! 🎉", "success")
-        return redirect(f'/orders/{order_id}')
-
+        return order_id, None
     except Exception as e:
         if conn:
             conn.rollback()
-        flash("Failed to place order. Please try again.", "error")
-        print(f"Checkout error: {e}")
+        print(f"Order placement error: {e}")
+        return None, 'Failed to place order. Please try again.'
     finally:
-        if cur2:
-            cur2.close()
         if cur:
             cur.close()
-        conn.close()
         if conn:
-            conn.autocommit = True
+            conn.close()
 
-# ═══════════════════════════════════════════════════════════
-#  ORDERS
-# ═══════════════════════════════════════════════════════════
+@app.route('/order/place/<int:pid>', methods=['POST'])
+@login_required
+def place_order(pid):
+    product_id = request.form.get('product_id', pid)
+    quantity = request.form.get('quantity', 1)
+    return redirect(url_for('checkout', buy_now='true', product_id=product_id, quantity=quantity))
+
+# 
+#  CHECKOUT & PLACE ORDER
+# 
+@app.route('/checkout', methods=['GET', 'POST'])
+@login_required
+def checkout():
+    uid = session['user_id']
+    source = 'buy_now' if request.values.get('buy_now') == 'true' else 'cart'
+
+    if request.method == 'GET':
+        try:
+            product_id = request.args.get('product_id', type=int)
+            quantity = request.args.get('quantity', default=1, type=int) or 1
+            quantity = max(1, quantity)
+        except (TypeError, ValueError):
+            flash("Invalid checkout item.", "error")
+            return redirect('/')
+
+        if source == 'buy_now' and not product_id:
+            flash("Choose a product before checkout.", "error")
+            return redirect('/')
+
+        items, total, addresses = load_checkout_context(uid, source, product_id, quantity)
+        if not items:
+            flash("There are no items to checkout.", "error")
+            return redirect('/cart' if source == 'cart' else '/')
+
+        return render_template(
+            "checkout.html",
+            items=items,
+            total=total,
+            addresses=addresses,
+            source=source,
+            product_id=product_id,
+            quantity=quantity
+        )
+
+    address_id = request.form.get('address_id')
+    notes = request.form.get('notes', '').strip()
+    method, payment_note, payment_error = validate_payment_details(request.form)
+    if payment_error:
+        flash(payment_error, "error")
+        if source == 'buy_now':
+            return redirect(url_for(
+                'checkout',
+                buy_now='true',
+                product_id=request.form.get('product_id'),
+                quantity=request.form.get('quantity', 1)
+            ))
+        return redirect('/checkout')
+
+    product_id = request.form.get('product_id', type=int)
+    quantity = request.form.get('quantity', default=1, type=int) or 1
+    quantity = max(1, quantity)
+    items, total, addresses = load_checkout_context(uid, source, product_id, quantity)
+
+    order_id, error = create_order_from_items(
+        uid,
+        items,
+        address_id,
+        payment_note,
+        notes,
+        clear_cart=(source == 'cart')
+    )
+    if error:
+        flash(error, "error")
+        if source == 'buy_now':
+            return redirect(url_for('checkout', buy_now='true', product_id=product_id, quantity=quantity))
+        return redirect('/checkout')
+
+    log_status(order_id, 'Pending', f'Order placed by customer via {method}', uid)
+    notify(uid, f"Order #{order_id} placed successfully.", "success")
+    flash(f"Order #{order_id} placed successfully.", "success")
+    return redirect(f'/orders/{order_id}')
+
 @app.route('/orders')
 @login_required
 def orders():
@@ -1052,7 +1132,7 @@ def order_detail(oid):
         STATUS_ORDER=STATUS_ORDER, current_idx=current_idx
     )
 
-# ─── Admin: update order status ──────────────────────────
+#  Admin: update order status 
 @app.route('/orders/<int:oid>/update', methods=['POST'])
 @login_required
 @admin_required
@@ -1086,15 +1166,15 @@ def update_order(oid):
 
     log_status(oid, new_status, note or f'Status updated to {new_status}', session['user_id'])
 
-    emoji = {'Pending':'⏳','Processing':'🔄','Shipped':'📦',
-             'Out_for_Delivery':'🚚','Delivered':'✅','Cancelled':'❌'}.get(new_status,'')
+    emoji = {'Pending':'','Processing':'','Shipped':'',
+             'Out_for_Delivery':'','Delivered':'','Cancelled':''}.get(new_status,'')
     notify(order['user_id'], f"Order #{oid} is now {new_status} {emoji}", "success")
 
     cur.close(); conn.close()
     flash(f"Order #{oid} updated to {new_status}.", "success")
     return redirect(f'/orders/{oid}')
 
-# ─── Delivery agent: update status ───────────────────────
+#  Delivery agent: update status 
 @app.route('/agent/update/<int:oid>', methods=['POST'])
 @login_required
 @agent_required
@@ -1118,14 +1198,14 @@ def agent_update_order(oid):
     conn.commit(); cur2.close()
     log_status(oid, new_status, f'Updated by agent', session['user_id'])
     if order:
-        notify(order['user_id'], f"Order #{oid} → {new_status} 🚚", "success")
+        notify(order['user_id'], f"Order #{oid}  {new_status} ", "success")
     cur.close(); conn.close()
-    flash(f"Order #{oid} → {new_status}", "success")
+    flash(f"Order #{oid}  {new_status}", "success")
     return redirect('/agent/dashboard')
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  REVIEWS
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/product/<int:pid>/review', methods=['POST'])
 @login_required
 def submit_review(pid):
@@ -1140,16 +1220,16 @@ def submit_review(pid):
             ON DUPLICATE KEY UPDATE rating=%s, comment=%s
         """, (uid, pid, rating, comment, rating, comment))
         conn.commit()
-        flash("Review submitted! ⭐", "success")
+        flash("Review submitted! ", "success")
     except Exception:
         flash("Could not submit review.", "error")
     finally:
         cur.close(); conn.close()
     return redirect(request.referrer or '/')
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  ADDRESSES
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/addresses')
 @login_required
 def addresses():
@@ -1194,9 +1274,9 @@ def delete_address(aid):
     conn.commit(); cur.close(); conn.close()
     return redirect('/addresses')
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  NOTIFICATIONS
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/notifications')
 @login_required
 def notifications():
@@ -1217,9 +1297,9 @@ def notifications():
 def notif_count():
     return jsonify(count=unread_count(session['user_id']))
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  INVOICE
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/invoice/<int:oid>')
 @login_required
 def invoice(oid):
@@ -1246,9 +1326,9 @@ def invoice(oid):
     cur.close(); conn.close()
     return render_template("invoice.html", order=order, items=items)
 
-# ═══════════════════════════════════════════════════════════
-#  ADMIN — DASHBOARD
-# ═══════════════════════════════════════════════════════════
+# 
+#  ADMIN  DASHBOARD
+# 
 @app.route('/admin/dashboard')
 @login_required
 @admin_required
@@ -1328,7 +1408,7 @@ def admin_dashboard():
         status_dist=status_dist, recent_orders=recent_orders
     )
 
-# ─── Admin: Products ─────────────────────────────────────
+#  Admin: Products 
 @app.route('/admin/products')
 @login_required
 @admin_required
@@ -1438,7 +1518,7 @@ def admin_delete_product(pid):
         cur.close(); conn.close()
     return redirect('/admin/products')
 
-# ─── Admin: Users ────────────────────────────────────────
+#  Admin: Users 
 @app.route('/admin/users')
 @login_required
 @admin_required
@@ -1507,7 +1587,7 @@ def admin_delete_user(user_id):
     flash(f"User {user['username']} removed.", "success")
     return redirect('/admin/users')
 
-# ─── Admin: Agents ───────────────────────────────────────
+#  Admin: Agents 
 @app.route('/admin/agents')
 @login_required
 @admin_required
@@ -1526,7 +1606,7 @@ def admin_agents():
     cur.close(); conn.close()
     return render_template("admin/agents.html", agents=agents)
 
-# ─── Admin: Analytics ────────────────────────────────────
+#  Admin: Analytics 
 @app.route('/admin/analytics')
 @login_required
 @admin_required
@@ -1586,9 +1666,9 @@ def admin_analytics():
         agent_perf=agent_perf
     )
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  DELIVERY AGENT DASHBOARD
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/agent/dashboard')
 @login_required
 @agent_required
@@ -1625,9 +1705,9 @@ def agent_dashboard():
         active_orders=active_orders, total_delivered=total_delivered
     )
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  REST API LAYER
-# ═══════════════════════════════════════════════════════════
+# 
 @app.route('/api/auth/me')
 def api_auth_me():
     if 'user_id' not in session:
@@ -1769,28 +1849,43 @@ def api_place_order():
     data       = request.get_json() or {}
     uid        = session['user_id']
     product_id = data.get('product_id')
-    quantity   = data.get('quantity', 1)
+    try:
+        quantity = max(1, int(data.get('quantity', 1)))
+    except (TypeError, ValueError):
+        return jsonify(error="Invalid quantity"), 400
     if not product_id:
         return jsonify(error="product_id required"), 400
+
+    address_id = data.get('address_id')
     conn = get_db(); cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT * FROM products WHERE product_id=%s AND is_active=1", (product_id,))
-    product = cur.fetchone()
+    try:
+        if not address_id:
+            cur.execute("""
+                SELECT address_id FROM addresses
+                WHERE user_id=%s
+                ORDER BY is_default DESC, address_id ASC
+                LIMIT 1
+            """, (uid,))
+            address = cur.fetchone()
+            address_id = address['address_id'] if address else None
+        cur.execute("SELECT product_id, name, price FROM products WHERE product_id=%s AND is_active=1", (product_id,))
+        product = cur.fetchone()
+    finally:
+        cur.close(); conn.close()
+
     if not product:
         return jsonify(error="Product not found"), 404
-    if product['stock'] < quantity:
-        return jsonify(error="Insufficient stock"), 400
-    cur2 = conn.cursor()
-    cur2.execute("INSERT INTO orders (user_id,status,total_amount) VALUES (%s,'Pending',%s)",
-                 (uid, float(product['price']) * quantity))
-    conn.commit()
-    oid = cur2.lastrowid
-    cur2.execute("INSERT INTO order_items (order_id,product_id,quantity,unit_price) VALUES (%s,%s,%s,%s)",
-                 (oid, product_id, quantity, product['price']))
-    cur2.execute("UPDATE products SET stock=stock-%s WHERE product_id=%s", (quantity, product_id))
-    conn.commit()
-    log_status(oid, 'Pending', 'API order', uid)
-    cur2.close(); cur.close(); conn.close()
-    return jsonify(order_id=oid, status='Pending', total=float(product['price'])*quantity), 201
+
+    payment_note = data.get('payment_note') or 'Payment: API'
+    items = [{'product_id': int(product_id), 'quantity': quantity}]
+    order_id, error = create_order_from_items(uid, items, address_id, payment_note)
+    if error:
+        return jsonify(error=error), 400
+
+    total = float(product['price']) * quantity
+    log_status(order_id, 'Pending', 'API order', uid)
+    notify(uid, f"Order #{order_id} placed successfully.", "success")
+    return jsonify(order_id=order_id, status='Pending', total=total), 201
 
 @app.route('/api/analytics')
 @login_required
@@ -1803,9 +1898,9 @@ def api_analytics():
     cur.close(); conn.close()
     return jsonify(revenue=float(r['revenue']))
 
-# ═══════════════════════════════════════════════════════════
+# 
 #  ERROR HANDLERS
-# ═══════════════════════════════════════════════════════════
+# 
 @app.errorhandler(403)
 def forbidden(e):
     return render_template("errors/403.html"), 403
@@ -1816,4 +1911,5 @@ def not_found(e):
 
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'False') == 'True'
-    app.run(debug=debug_mode, threaded=True)   # threaded=True → handles concurrent users
+    app.run(debug=debug_mode, threaded=True)   # threaded=True  handles concurrent users
+

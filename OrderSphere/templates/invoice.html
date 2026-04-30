@@ -1,10 +1,9 @@
-{% extends "base.html" %}
-{% block title %}Invoice #{{ order.order_id }} · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Invoice #{{ order.order_id }}  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
   <div class="flex-between mb-16" style="flex-wrap:wrap;gap:10px">
-    <a href="/orders/{{ order.order_id }}" class="back-link">← Back to Order</a>
-    <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print Invoice</button>
+    <button onclick="window.print()" class="btn btn-primary btn-sm"> Print Invoice</button>
   </div>
 
   <div class="invoice-wrap fade-in">
@@ -27,7 +26,7 @@
           <div style="font-size:.9rem;color:#141515;line-height:1.8">
             <strong>{{ order.username }}</strong><br>
             {{ order.email }}<br>
-            {% if order.phone %}📞 {{ order.phone }}<br>{% endif %}
+            {% if order.phone %} {{ order.phone }}<br>{% endif %}
           </div>
         </div>
         <div>
@@ -35,7 +34,7 @@
           <div style="font-size:.9rem;color:#141515;line-height:1.8">
             {% if order.line1 %}
             {{ order.line1 }}{% if order.line2 %}, {{ order.line2 }}{% endif %}<br>
-            {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} — {{ order.pincode }}
+            {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} - {{ order.pincode }}
             {% else %}
             Not specified
             {% endif %}
@@ -59,8 +58,8 @@
             <td style="color:#999">{{ loop.index }}</td>
             <td><strong>{{ item.name }}</strong></td>
             <td style="text-align:center">{{ item.quantity }}</td>
-            <td style="text-align:right">₹{{ "%.2f"|format(item.unit_price|float) }}</td>
-            <td style="text-align:right;font-weight:700">₹{{ "%.2f"|format(item.subtotal|float) }}</td>
+            <td style="text-align:right">&#8377;{{ "%.2f"|format(item.unit_price|float) }}</td>
+            <td style="text-align:right;font-weight:700">&#8377;{{ "%.2f"|format(item.subtotal|float) }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -69,24 +68,26 @@
       <div style="border-top:2px solid #e2e8f0;padding-top:16px;margin-top:8px">
         <div style="display:flex;justify-content:space-between;font-size:.88rem;padding:6px 0;color:#555">
           <span>Subtotal</span>
-          <span>₹{{ "%.2f"|format(order.total_amount|float) }}</span>
+          <span>&#8377;{{ "%.2f"|format(order.total_amount|float) }}</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:.88rem;padding:6px 0;color:#555">
           <span>Delivery</span>
-          <span style="color:#16a34a">FREE</span>
+          <span style="color:#3b82f6">FREE</span>
         </div>
         <div class="invoice-total" style="padding:10px 0;border-top:1px solid #e2e8f0;margin-top:6px">
-          Total: ₹{{ "%.2f"|format(order.total_amount|float) }}
+          Total: &#8377;{{ "%.2f"|format(order.total_amount|float) }}
         </div>
       </div>
 
       <div style="margin-top:28px;padding-top:20px;border-top:1px dashed #ccc;text-align:center;color:#999;font-size:.78rem">
         <p>Status: <strong style="color:#032258">{{ order.status.replace('_',' ') }}</strong>
-          {% if order.delivered_at %} · Delivered: {{ order.delivered_at.strftime('%d %b %Y') }}{% endif %}
+          {% if order.delivered_at %}  Delivered: {{ order.delivered_at.strftime('%d %b %Y') }}{% endif %}
         </p>
-        <p style="margin-top:8px">Thank you for shopping with OrderSphere! 🌿</p>
+        <p style="margin-top:8px">Thank you for shopping with OrderSphere! </p>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
+
+

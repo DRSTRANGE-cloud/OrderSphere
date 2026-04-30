@@ -1,16 +1,14 @@
-{% extends "base.html" %}
-{% block title %}Shopping Cart · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Shopping Cart - OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
-  <a href="/" class="back-link">← Continue Shopping</a>
   <div class="page-header">
-    <h1 class="page-title">🛒 Shopping Cart</h1>
+    <h1 class="page-title">Shopping Cart</h1>
     <p class="page-sub">{{ items|length }} item(s) in your cart</p>
   </div>
 
   {% if items %}
   <div class="cart-layout">
-    <!-- Cart Items -->
     <div class="card" style="padding:0">
       {% for item in items %}
       <div class="cart-item">
@@ -18,134 +16,54 @@
           {% if item.image_url %}
           <img class="cart-img" src="{{ item.image_url }}" alt="{{ item.name }}"/>
           {% else %}
-          <div class="cart-img" style="background:var(--bg-mid);display:flex;align-items:center;justify-content:center;font-size:1.8rem">🛒</div>
+          <div class="cart-img" style="background:var(--bg-mid);display:flex;align-items:center;justify-content:center;font-size:.78rem">Item</div>
           {% endif %}
         </a>
         <div class="cart-info">
           <div class="cart-name">{{ item.name }}</div>
-          <div class="cart-price">₹{{ "%.0f"|format(item.price) }} each</div>
+          <div class="cart-price">&#8377;{{ "%.0f"|format(item.price) }} each</div>
           <form method="POST" action="/cart/update/{{ item.cart_id }}" style="display:inline">
             <div class="qty-control">
-              <button type="submit" name="quantity" value="{{ item.quantity - 1 }}" class="qty-btn">−</button>
+              <button type="submit" name="quantity" value="{{ item.quantity - 1 }}" class="qty-btn" aria-label="Decrease quantity">-</button>
               <span class="qty-val">{{ item.quantity }}</span>
-              <button type="submit" name="quantity" value="{{ item.quantity + 1 }}"
-                      class="qty-btn" {% if item.quantity >= item.stock %}disabled{% endif %}>+</button>
+              <button type="submit" name="quantity" value="{{ item.quantity + 1 }}" class="qty-btn" {% if item.quantity >= item.stock %}disabled{% endif %} aria-label="Increase quantity">+</button>
             </div>
           </form>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-          <span class="cart-subtotal">₹{{ "%.0f"|format(item.subtotal) }}</span>
+          <span class="cart-subtotal">&#8377;{{ "%.0f"|format(item.subtotal) }}</span>
           <a href="/cart/remove/{{ item.cart_id }}" class="btn btn-danger btn-sm">Remove</a>
         </div>
       </div>
       {% endfor %}
     </div>
 
-    <!-- Order Summary -->
     <div class="card summary-card">
       <h3 style="font-size:1rem;font-weight:800;margin-bottom:16px">Order Summary</h3>
       {% for item in items %}
       <div class="summary-row">
-        <span>{{ item.name[:25] }}{% if item.name|length > 25 %}…{% endif %} ×{{ item.quantity }}</span>
-        <span>₹{{ "%.0f"|format(item.subtotal) }}</span>
+        <span>{{ item.name[:25] }}{% if item.name|length > 25 %}...{% endif %} x{{ item.quantity }}</span>
+        <span>&#8377;{{ "%.0f"|format(item.subtotal) }}</span>
       </div>
       {% endfor %}
       <div class="summary-row">
-        <span>Delivery</span><span style="color:var(--success)">FREE</span>
+        <span>Delivery</span><span class="text-accent">FREE</span>
       </div>
       <div class="summary-row total">
-        <span>Total</span><span>₹{{ "%.0f"|format(total) }}</span>
+        <span>Total</span><span>&#8377;{{ "%.0f"|format(total) }}</span>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Address -->
-      {% if addresses %}
-      <div class="field">
-        <label>Delivery Address</label>
-        <select name="address_id" form="checkout-form">
-          {% for a in addresses %}
-          <option value="{{ a.address_id }}" {% if a.is_default %}selected{% endif %}>
-            {{ a.label }} — {{ a.line1 }}, {{ a.city }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
-      {% else %}
-      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:.83rem;color:#fbbf24">
-        ⚠️ <a href="/addresses" style="color:#fbbf24;font-weight:700">Add a delivery address</a> before placing order.
-      </div>
-      {% endif %}
-
-      <div class="field">
-        <label>Order Notes (optional)</label>
-        <textarea form="checkout-form" name="notes" rows="2" placeholder="Special instructions…"></textarea>
-      </div>
-
-      <div class="field">
-        <label>Payment Method</label>
-        <div class="payment-options">
-          <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="COD" checked onchange="togglePaymentDetails()">
-            <span>💳 Cash on Delivery</span>
-          </label>
-          <div id="details-COD" class="payment-details" style="display:block">
-             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Pay securely with cash when your order arrives. No advance payment needed.</p>
-          </div>
-          
-          <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="UPI" onchange="togglePaymentDetails()">
-            <span>📱 UPI</span>
-          </label>
-          <div id="details-UPI" class="payment-details" style="display:none">
-             <input form="checkout-form" type="text" name="upi_id" placeholder="Enter UPI ID (e.g., name@upi)" style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
-             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 6px 0 0 0;">You will receive a UPI payment request on your registered mobile.</p>
-          </div>
-
-          <label class="payment-card">
-            <input form="checkout-form" type="radio" name="payment_method" value="Card" onchange="togglePaymentDetails()">
-            <span>💰 Debit / Credit Card</span>
-          </label>
-          <div id="details-Card" class="payment-details" style="display:none; flex-direction: column; gap: 10px;">
-             <input form="checkout-form" type="text" name="card_number" placeholder="Card Number" maxlength="19" style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
-             <div style="display:flex; gap: 10px;">
-                 <input form="checkout-form" type="text" name="card_expiry" placeholder="MM/YY" maxlength="5" style="flex:1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
-                 <input form="checkout-form" type="text" name="card_cvv" placeholder="CVV" maxlength="4" style="flex:0.6; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(116,119,121,0.1); color: var(--text-main); font-size: 0.88rem;">
-             </div>
-             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Your card details are securely processed.</p>
-          </div>
-        </div>
-      </div>
-
-      <script>
-      function togglePaymentDetails() {
-          document.querySelectorAll('.payment-details').forEach(el => {
-            el.style.display = 'none';
-          });
-          const checked = document.querySelector('input[name="payment_method"]:checked');
-          if (checked) {
-              const details = document.getElementById('details-' + checked.value);
-              if (details) {
-                  details.style.display = checked.value === 'Card' ? 'flex' : 'block';
-                  // Add fade-in animation
-                  details.style.animation = 'fadeIn 0.2s ease';
-              }
-          }
-      }
-      document.addEventListener('DOMContentLoaded', togglePaymentDetails);
-      </script>
-
-      <form id="checkout-form" method="POST" action="/checkout">
-        <button type="submit" class="btn btn-primary btn-full btn-lg">
-          Place Order · ₹{{ "%.0f"|format(total) }}
-        </button>
-      </form>
+      <a href="/checkout" class="btn btn-primary btn-full btn-lg">
+        Proceed to Checkout &middot; &#8377;{{ "%.0f"|format(total) }}
+      </a>
     </div>
   </div>
 
   {% else %}
   <div class="empty-state fade-in">
-    <div class="empty-icon">🛒</div>
+    <div class="empty-icon">Cart</div>
     <p class="empty-title">Your cart is empty</p>
     <p class="empty-sub">Browse products and add items to get started.</p>
     <a href="/" class="btn btn-primary" style="margin-top:16px">Shop Now</a>
@@ -153,3 +71,4 @@
   {% endif %}
 </div>
 {% endblock %}
+

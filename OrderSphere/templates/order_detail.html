@@ -1,8 +1,7 @@
-{% extends "base.html" %}
-{% block title %}Order #{{ order.order_id }} · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Order #{{ order.order_id }}  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
-  <a href="/orders" class="back-link">← Back to Orders</a>
 
   <div class="flex-between" style="margin-bottom:28px;flex-wrap:wrap;gap:12px">
     <div>
@@ -11,16 +10,16 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <span class="status-badge st-{{ order.status.lower() }}">
-        {% set icons = {'Pending':'⏳','Processing':'🔄','Shipped':'📦',
-                        'Out_for_Delivery':'🚚','Delivered':'✅','Cancelled':'❌'} %}
+        {% set icons = {'Pending':'','Processing':'','Shipped':'',
+                        'Out_for_Delivery':'','Delivered':'','Cancelled':''} %}
         {{ icons.get(order.status,'') }} {{ order.status.replace('_',' ') }}
       </span>
-      <a href="/invoice/{{ order.order_id }}" class="btn btn-success btn-sm">🧾 Invoice</a>
+      <a href="/invoice/{{ order.order_id }}" class="btn btn-success btn-sm"> Invoice</a>
     </div>
   </div>
 
   <!-- Progress Tracker -->
-  {% set steps = [('Pending','⏳'),('Processing','🔄'),('Shipped','📦'),('Out_for_Delivery','🚚'),('Delivered','✅')] %}
+  {% set steps = [('Pending',''),('Processing',''),('Shipped',''),('Out_for_Delivery',''),('Delivered','')] %}
   <div class="card mb-24">
     <div class="progress-tracker">
       {% for status, icon in steps %}
@@ -40,35 +39,35 @@
 
       <!-- Items -->
       <div class="card">
-        <h3 class="card-title">📦 Order Items</h3>
+        <h3 class="card-title"> Order Items</h3>
         {% for item in items %}
         <div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
           {% if item.image_url %}
           <img src="{{ item.image_url }}" alt="{{ item.name }}"
                style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0"/>
           {% else %}
-          <div style="width:60px;height:60px;border-radius:8px;background:var(--bg-mid);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🛒</div>
+          <div style="width:60px;height:60px;border-radius:8px;background:var(--bg-mid);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0"></div>
           {% endif %}
           <div style="flex:1">
             <a href="/product/{{ item.slug }}" class="fw-700" style="font-size:.9rem">{{ item.name }}</a>
-            <div style="font-size:.82rem;color:var(--text-muted)">₹{{ "%.0f"|format(item.unit_price) }} × {{ item.quantity }}</div>
+            <div style="font-size:.82rem;color:var(--text-muted)">&#8377;{{ "%.0f"|format(item.unit_price) }} x {{ item.quantity }}</div>
           </div>
-          <div class="fw-700 text-accent">₹{{ "%.0f"|format(item.subtotal) }}</div>
+          <div class="fw-700 text-accent">&#8377;{{ "%.0f"|format(item.subtotal) }}</div>
         </div>
         {% endfor %}
         <div style="text-align:right;margin-top:16px;font-size:1.1rem;font-weight:800;color:var(--accent)">
-          Total: ₹{{ "%.0f"|format(order.total_amount) }}
+          Total: &#8377;{{ "%.0f"|format(order.total_amount) }}
         </div>
       </div>
 
       <!-- Status Timeline -->
       <div class="card">
-        <h3 class="card-title">🕐 Tracking Timeline</h3>
+        <h3 class="card-title"> Tracking Timeline</h3>
         <div class="timeline">
           {% for log in logs %}
           <div class="tl-step">
             <div class="tl-dot {% if loop.last %}active{% else %}done{% endif %}">
-              {{ {'Pending':'⏳','Processing':'🔄','Shipped':'📦','Out_for_Delivery':'🚚','Delivered':'✅','Cancelled':'❌'}.get(log.status,'•') }}
+              {{ {'Pending':'','Processing':'','Shipped':'','Out_for_Delivery':'','Delivered':'','Cancelled':''}.get(log.status,'') }}
             </div>
             <div class="tl-content">
               <div class="tl-label">{{ log.status.replace('_',' ') }}</div>
@@ -88,12 +87,12 @@
 
       <!-- Delivery Info -->
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem">📍 Delivery Address</h3>
+        <h3 class="card-title" style="font-size:.88rem"> Delivery Address</h3>
         {% if order.line1 %}
         <div style="font-size:.88rem;color:var(--text-muted);line-height:1.8">
           {{ order.line1 }}<br>
           {% if order.line2 %}{{ order.line2 }}<br>{% endif %}
-          {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} — {{ order.pincode }}
+          {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} - {{ order.pincode }}
         </div>
         {% else %}
         <p class="text-muted" style="font-size:.85rem">No address on record.</p>
@@ -102,21 +101,21 @@
 
       <!-- Customer -->
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem">👤 Customer</h3>
+        <h3 class="card-title" style="font-size:.88rem"> Customer</h3>
         <div style="font-size:.88rem;color:var(--text-muted)">
           <div><strong style="color:var(--text-main)">{{ order.username }}</strong></div>
           <div>{{ order.email }}</div>
-          {% if order.phone %}<div>📞 {{ order.phone }}</div>{% endif %}
+          {% if order.phone %}<div> {{ order.phone }}</div>{% endif %}
         </div>
       </div>
 
       <!-- Agent -->
       {% if order.agent_name %}
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem">🚚 Delivery Agent</h3>
+        <h3 class="card-title" style="font-size:.88rem"> Delivery Agent</h3>
         <div style="font-size:.88rem;color:var(--text-muted)">
           <strong style="color:var(--text-main)">{{ order.agent_name }}</strong><br>
-          {{ order.vehicle or '' }} · {{ order.zone or '' }}
+          {{ order.vehicle or '' }}  {{ order.zone or '' }}
         </div>
       </div>
       {% endif %}
@@ -124,7 +123,7 @@
       <!-- Admin Controls -->
       {% if g_role == 'admin' %}
       <div class="card card-sm">
-        <h3 class="card-title" style="font-size:.88rem">⚙️ Update Order</h3>
+        <h3 class="card-title" style="font-size:.88rem"> Update Order</h3>
         <form method="POST" action="/orders/{{ order.order_id }}/update">
           <div class="field" style="margin-bottom:12px">
             <label>Status</label>
@@ -137,7 +136,7 @@
           <div class="field" style="margin-bottom:12px">
             <label>Assign Agent</label>
             <select name="agent_id">
-              <option value="">— None —</option>
+              <option value="">- None -</option>
               {% for a in agents %}
               <option value="{{ a.agent_id }}" {% if order.agent_id and order.agent_id==a.agent_id %}selected{% endif %}>
                 {{ a.username }} ({{ a.zone }})
@@ -164,3 +163,5 @@
 }
 </style>
 {% endblock %}
+
+

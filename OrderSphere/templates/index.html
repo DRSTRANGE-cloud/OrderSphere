@@ -1,40 +1,32 @@
-{% extends "base.html" %}
-{% block title %}Shop Products · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Shop Products - OrderSphere{% endblock %}
 {% block meta_desc %}Browse and order products on OrderSphere. Fast delivery, real-time tracking.{% endblock %}
 
 {% block content %}
 <div class="main-wrap">
-
-  <!-- KPI Row -->
   <div class="kpi-grid stagger fade-up" style="margin-bottom:28px">
     <div class="kpi-card">
-      <div class="kpi-icon">🛍️</div>
       <div class="kpi-val">{{ total_products }}</div>
       <div class="kpi-label">Products Available</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">📋</div>
       <div class="kpi-val">{{ my_orders }}</div>
       <div class="kpi-label">My Orders</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">🚀</div>
       <div class="kpi-val">{{ active_orders }}</div>
       <div class="kpi-label">Active Orders</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">✅</div>
       <div class="kpi-val">{{ delivered }}</div>
       <div class="kpi-label">Delivered</div>
     </div>
   </div>
 
-  <!-- Filter & Sort Bar -->
   <div class="filter-bar">
     <a href="/" class="filter-chip {% if not cat_id %}active{% endif %}">All</a>
     {% for cat in categories %}
-    <a href="/?cat={{ cat.cat_id }}{% if search %}&q={{ search }}{% endif %}"
-       class="filter-chip {% if cat_id|string == cat.cat_id|string %}active{% endif %}">
+    <a href="/?cat={{ cat.cat_id }}{% if search %}&q={{ search }}{% endif %}" class="filter-chip {% if cat_id|string == cat.cat_id|string %}active{% endif %}">
       {{ cat.name }}
     </a>
     {% endfor %}
@@ -43,10 +35,10 @@
         {% if cat_id %}<input type="hidden" name="cat" value="{{ cat_id }}">{% endif %}
         {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
         <select name="sort" class="sort-select" onchange="this.form.submit()">
-          <option value="newest"     {% if sort_by=='newest'     %}selected{% endif %}>Newest</option>
-          <option value="price_asc"  {% if sort_by=='price_asc'  %}selected{% endif %}>Price: Low→High</option>
-          <option value="price_desc" {% if sort_by=='price_desc' %}selected{% endif %}>Price: High→Low</option>
-          <option value="rating"     {% if sort_by=='rating'     %}selected{% endif %}>Top Rated</option>
+          <option value="newest" {% if sort_by=='newest' %}selected{% endif %}>Newest</option>
+          <option value="price_asc" {% if sort_by=='price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if sort_by=='price_desc' %}selected{% endif %}>Price: High to Low</option>
+          <option value="rating" {% if sort_by=='rating' %}selected{% endif %}>Top Rated</option>
         </select>
       </form>
     </div>
@@ -55,12 +47,11 @@
   {% if search %}
   <p class="text-muted mb-16" style="font-size:.9rem">
     Search results for <strong style="color:var(--accent)">"{{ search }}"</strong>
-    — {{ products|length }} product(s) found
-    · <a href="/">Clear</a>
+    - {{ products|length }} product(s) found
+    &middot; <a href="/">Clear</a>
   </p>
   {% endif %}
 
-  <!-- Products Grid -->
   {% if products %}
   <div class="product-grid stagger">
     {% for p in products %}
@@ -70,7 +61,7 @@
           {% if p.image_url %}
           <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy" itemprop="image"/>
           {% else %}
-          <div class="product-img-placeholder">🛒</div>
+          <div class="product-img-placeholder">No image</div>
           {% endif %}
           {% if p.stock == 0 %}
           <span class="out-of-stock-badge">Out of Stock</span>
@@ -83,24 +74,21 @@
           <h2 class="product-name" itemprop="name">{{ p.name }}</h2>
           <p class="product-desc" itemprop="description">{{ p.description or '' }}</p>
           <div class="product-footer">
-            <span class="product-price" itemprop="price" content="{{ p.price }}">
-              ₹{{ "%.0f"|format(p.price) }}
-            </span>
+            <span class="product-price" itemprop="price" content="{{ p.price }}">&#8377;{{ "%.0f"|format(p.price) }}</span>
             {% if p.avg_rating > 0 %}
             <span class="product-rating">
-              ⭐ {{ "%.1f"|format(p.avg_rating) }}
+              {{ "%.1f"|format(p.avg_rating) }} star
               <span style="color:var(--text-muted)">({{ p.review_count }})</span>
             </span>
             {% endif %}
           </div>
         </div>
       </a>
-      <!-- Quick Add to Cart -->
       {% if p.stock > 0 %}
       <div style="padding:0 16px 16px">
         <form method="POST" action="/cart/add/{{ p.product_id }}">
           <input type="hidden" name="quantity" value="1"/>
-          <button type="submit" class="btn btn-primary btn-sm btn-full">🛒 Add to Cart</button>
+          <button type="submit" class="btn btn-primary btn-sm btn-full">Add to Cart</button>
         </form>
       </div>
       {% else %}
@@ -111,16 +99,15 @@
     </article>
     {% endfor %}
   </div>
-
   {% else %}
   <div class="empty-state fade-in">
-    <div class="empty-icon">🔍</div>
+    <div class="empty-icon">Search</div>
     <p class="empty-title">No products found</p>
     <p class="empty-sub">
       {% if search %}No results for "{{ search }}". <a href="/">Clear search</a>{% else %}No products available.{% endif %}
     </p>
   </div>
   {% endif %}
-
 </div>
 {% endblock %}
+

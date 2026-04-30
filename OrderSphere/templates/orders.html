@@ -1,10 +1,10 @@
-{% extends "base.html" %}
-{% block title %}{% if role=='admin' %}All Orders{% else %}My Orders{% endif %} · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}{% if role=='admin' %}All Orders{% else %}My Orders{% endif %}  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
   <div class="page-header flex-between">
     <div>
-      <h1 class="page-title">{% if role=='admin' %}📦 All Orders{% else %}📋 My Orders{% endif %}</h1>
+      <h1 class="page-title">{% if role=='admin' %} All Orders{% else %} My Orders{% endif %}</h1>
       <p class="page-sub">{{ orders|length }} order(s) found</p>
     </div>
   </div>
@@ -46,26 +46,26 @@
           </td>
           {% endif %}
           <td style="color:var(--text-muted)">{{ o.item_count }} item(s)</td>
-          <td class="fw-700">₹{{ "%.0f"|format(o.total_amount) }}</td>
+          <td class="fw-700">&#8377;{{ "%.0f"|format(o.total_amount) }}</td>
           <td>
             <span class="status-badge st-{{ o.status.lower() }}">
-              {% set icons = {'Pending':'⏳','Processing':'🔄','Shipped':'📦',
-                              'Out_for_Delivery':'🚚','Delivered':'✅','Cancelled':'❌'} %}
+              {% set icons = {'Pending':'','Processing':'','Shipped':'',
+                              'Out_for_Delivery':'','Delivered':'','Cancelled':''} %}
               {{ icons.get(o.status,'') }} {{ o.status.replace('_',' ') }}
             </span>
           </td>
           {% if role == 'admin' %}
-          <td style="font-size:.82rem;color:var(--text-muted)">{{ o.agent_name or '—' }}</td>
+          <td style="font-size:.82rem;color:var(--text-muted)">{{ o.agent_name or '-' }}</td>
           <td>
             {% if delayed %}
-            <span style="color:#f87171;font-size:.78rem;font-weight:700">⚠️ {{ o.age_hours }}h — DELAYED</span>
+            <span style="color:#f87171;font-size:.78rem;font-weight:700"> {{ o.age_hours }}h - DELAYED</span>
             {% else %}
             <span style="color:var(--success);font-size:.78rem">{{ o.age_hours }}h</span>
             {% endif %}
           </td>
           {% endif %}
           <td style="color:var(--text-muted);font-size:.82rem">
-            {{ o.ordered_at.strftime('%d %b %Y') if o.ordered_at else '—' }}
+            {{ o.ordered_at.strftime('%d %b %Y') if o.ordered_at else '-' }}
           </td>
           <td>
             <div style="display:flex;gap:6px">
@@ -81,10 +81,12 @@
 
   {% else %}
   <div class="empty-state fade-in">
-    <div class="empty-icon">📭</div>
+    <div class="empty-icon"></div>
     <p class="empty-title">No orders found</p>
     <p class="empty-sub">{% if not status_filter %}<a href="/">Start shopping</a>{% else %}Try a different filter.{% endif %}</p>
   </div>
   {% endif %}
 </div>
 {% endblock %}
+
+

@@ -1,10 +1,10 @@
-{% extends "base.html" %}
-{% block title %}My Dashboard · OrderSphere{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}My Dashboard  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
   <div class="page-header">
     <div>
-      <h1 class="page-title">📊 Your Dashboard</h1>
+      <h1 class="page-title"> Your Dashboard</h1>
       <p class="page-sub">Welcome back, {{ g_username }}! Here's your order overview.</p>
     </div>
     <a href="/" class="btn btn-primary">+ Continue Shopping</a>
@@ -13,23 +13,23 @@
   <!-- KPI Cards -->
   <div class="kpi-grid stagger fade-up" style="margin-bottom:28px">
     <div class="kpi-card">
-      <div class="kpi-icon">📦</div>
+      <div class="kpi-icon"></div>
       <div class="kpi-val">{{ total_orders }}</div>
       <div class="kpi-label">Total Orders</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">✅</div>
+      <div class="kpi-icon"></div>
       <div class="kpi-val">{{ delivered_orders }}</div>
       <div class="kpi-label">Delivered</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">🚀</div>
+      <div class="kpi-icon"></div>
       <div class="kpi-val">{{ active_orders }}</div>
       <div class="kpi-label">Active Orders</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-val">₹{{ "%.0f"|format(total_spent) }}</div>
+      <div class="kpi-icon"></div>
+      <div class="kpi-val">&#8377;{{ "%.0f"|format(total_spent) }}</div>
       <div class="kpi-label">Total Spent</div>
     </div>
   </div>
@@ -37,7 +37,7 @@
   <!-- Recent Orders -->
   <div class="card fade-in">
     <div class="flex-between" style="margin-bottom:20px">
-      <h3 class="card-title">📋 Recent Orders</h3>
+      <h3 class="card-title"> Recent Orders</h3>
       <a href="/orders" class="btn btn-sm btn-outline">View All</a>
     </div>
 
@@ -59,14 +59,14 @@
           <tr>
             <td class="fw-700">#{{ order.order_id }}</td>
             <td>{{ order.item_count }} item{% if order.item_count != 1 %}s{% endif %}</td>
-            <td class="fw-700">₹{{ "%.0f"|format(order.total_amount) }}</td>
+            <td class="fw-700">&#8377;{{ "%.0f"|format(order.total_amount) }}</td>
             <td>
               <span class="status-badge status-{{ order.status|lower }}">
                 {{ order.status }}
               </span>
             </td>
             <td style="font-size:.85rem;color:var(--text-muted)">
-              {{ order.ordered_at.strftime('%d %b %Y') if order.ordered_at else '—' }}
+              {{ order.ordered_at.strftime('%d %b %Y') if order.ordered_at else '-' }}
             </td>
             <td>
               <a href="/orders/{{ order.order_id }}" class="btn btn-sm btn-outline">View</a>
@@ -78,7 +78,7 @@
     </div>
     {% else %}
     <div class="empty-state" style="padding:40px 20px;text-align:center">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon"></div>
       <p class="empty-title">No orders yet</p>
       <p class="empty-sub">Start shopping to see your orders here!</p>
       <a href="/" class="btn btn-primary" style="margin-top:16px">Browse Products</a>
@@ -89,22 +89,22 @@
   <!-- Quick Links -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:28px">
     <a href="/orders" class="quick-link-card fade-in">
-      <span style="font-size:1.6rem">📦</span>
+      <span style="font-size:1.6rem"></span>
       <span class="quick-link-title">My Orders</span>
       <span class="quick-link-sub">Track status</span>
     </a>
     <a href="/addresses" class="quick-link-card fade-in">
-      <span style="font-size:1.6rem">📍</span>
+      <span style="font-size:1.6rem"></span>
       <span class="quick-link-title">Addresses</span>
       <span class="quick-link-sub">Manage delivery</span>
     </a>
     <a href="/notifications" class="quick-link-card fade-in">
-      <span style="font-size:1.6rem">🔔</span>
+      <span style="font-size:1.6rem"></span>
       <span class="quick-link-title">Notifications</span>
       <span class="quick-link-sub">Updates</span>
     </a>
     <a href="/" class="quick-link-card fade-in">
-      <span style="font-size:1.6rem">🛍️</span>
+      <span style="font-size:1.6rem"></span>
       <span class="quick-link-title">Shop</span>
       <span class="quick-link-sub">Browse more</span>
     </a>
@@ -125,7 +125,7 @@
   .status-pending { background: rgba(245,158,11,.15); color: #fbbf24; }
   .status-processing { background: rgba(59,130,246,.15); color: #3b82f6; }
   .status-shipped { background: rgba(168,85,247,.15); color: #a855f7; }
-  .status-delivered { background: rgba(16,185,129,.15); color: #10b981; }
+  .status-delivered { background: rgba(59,130,246,.15); color: #3b82f6; }
   .status-cancelled { background: rgba(239,68,68,.15); color: #f87171; }
 
   .quick-link-card {
@@ -159,3 +159,5 @@
 </style>
 
 {% endblock %}
+
+

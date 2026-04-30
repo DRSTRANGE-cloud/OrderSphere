@@ -1,7 +1,7 @@
-(function () {
-  // ─────────────────────────────────────────────────────────
+﻿(function () {
+  // 
   // Password Visibility Toggle
-  // ─────────────────────────────────────────────────────────
+  // 
   document.querySelectorAll('.password-toggle').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -9,14 +9,14 @@
       const showing = input.type === 'text';
       
       input.type = showing ? 'password' : 'text';
-      btn.textContent = showing ? '👁️ Show' : '🙈 Hide';
+      btn.textContent = showing ? ' Show' : ' Hide';
       btn.style.transition = 'all 0.2s ease';
     });
   });
 
-  // ─────────────────────────────────────────────────────────
+  // 
   // Password Strength Meter
-  // ─────────────────────────────────────────────────────────
+  // 
   const strengthInput = document.querySelector('[data-strength]');
   const meter = document.querySelector('.strength-meter');
   
@@ -48,18 +48,19 @@
     strengthInput.addEventListener('focus', updateStrength);
   }
 
-  // ─────────────────────────────────────────────────────────
+  // 
   // Form Submission Feedback
-  // ─────────────────────────────────────────────────────────
+  // 
   const authForms = document.querySelectorAll('form');
   authForms.forEach((form) => {
     form.addEventListener('submit', function() {
       const submitBtn = form.querySelector('button[type="submit"]');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Processing...';
+        submitBtn.textContent = ' Processing...';
       }
     });
   });
 })();
+
 
