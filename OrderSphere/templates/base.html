@@ -103,7 +103,19 @@
         </button>
 
         <div class="nav-links" id="navMenu">
-          <a href="/" class="nav-link">Products</a>
+          {% if g_role == 'admin' %}
+          <a
+            href="/admin/products"
+            class="nav-link {% if request.endpoint == 'admin_products' %}active{% endif %}"
+            >Products</a
+          >
+          {% else %}
+          <a
+            href="/"
+            class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"
+            >Products</a
+          >
+          {% endif %}
           {% if g_role == 'admin' %}
           <a
             href="/admin/dashboard"

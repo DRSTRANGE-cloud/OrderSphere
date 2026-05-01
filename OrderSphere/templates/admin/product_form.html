@@ -9,7 +9,7 @@
 
     <div style="max-width:640px;margin-top:24px">
       <div class="card scale-in">
-        <form method="POST" action="{{ '/admin/product/edit/'+product.product_id|string if product else '/admin/product/add' }}">
+        <form method="POST" action="{{ url_for('admin_edit_product', pid=product.product_id) if product else url_for('admin_add_product') }}">
           <div class="field-row">
             <div class="field">
               <label>Product Name *</label>

@@ -136,6 +136,7 @@ def format_order_no(order_id):
 # Register globally in Jinja
 app.jinja_env.globals.update(encode_order_id=encode_order_id)
 app.jinja_env.globals.update(format_order_no=format_order_no)
+app.jinja_env.filters['tojson'] = json.dumps
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -237,11 +238,6 @@ def ensure_nature_catalog(force=False):
                   price=VALUES(price), stock=VALUES(stock), image_url=VALUES(image_url), is_active=1
             """, (cat_ids[cat_slug], name, slug, desc, price, stock, image_url))
 
-        placeholders = ",".join(["%s"] * len(product_slugs))
-        cur.execute(f"UPDATE products SET is_active=0 WHERE slug NOT IN ({placeholders})", product_slugs)
-        category_slugs = [slug for _, slug in NATURE_CATEGORIES]
-        cat_placeholders = ",".join(["%s"] * len(category_slugs))
-        cur.execute(f"DELETE FROM categories WHERE slug NOT IN ({cat_placeholders})", category_slugs)
         conn.commit()
         catalog_synced = True
     finally:
@@ -1463,12 +1459,15 @@ def admin_products():
     conn = get_db(); cur = conn.cursor(dictionary=True)
     cur.execute("""
         SELECT p.*, c.name AS category,
-               COALESCE(AVG(r.rating),0) AS avg_rating
+               COALESCE(rr.avg_rating,0) AS avg_rating
         FROM products p
         LEFT JOIN categories c ON p.cat_id=c.cat_id
-        LEFT JOIN reviews r    ON r.product_id=p.product_id
-        WHERE p.is_active=1
-        GROUP BY p.product_id ORDER BY p.created_at DESC
+        LEFT JOIN (
+            SELECT product_id, AVG(rating) AS avg_rating
+            FROM reviews
+            GROUP BY product_id
+        ) rr ON rr.product_id=p.product_id
+        ORDER BY p.is_active DESC, p.created_at DESC
     """)
     products = cur.fetchall()
     cur.execute("SELECT * FROM categories ORDER BY name")
@@ -2074,7 +2073,9 @@ def verify_payment():
         finally:
             cur.close()
             conn.close()
-            
+    except Exception as e:
+        print(f"Error verifying payment: {e}")
+        return jsonify({'error': 'Payment verification failed'}), 500
 
 @app.errorhandler(500)
 def internal_error(e):
@@ -2087,9 +2088,6 @@ def handle_exception(e):
     print(f"⚠️  Unhandled Exception: {type(e).__name__}: {e}")
     return render_template("errors/500.html" if os.path.exists("templates/errors/500.html") else "errors/404.html",
                           error_message="Something went wrong. Our team has been notified."), 500
-    except Exception as e:
-        print(f"Error verifying payment: {e}")
-        return jsonify({'error': 'Payment verification failed'}), 500
 
 # 
 #  ERROR HANDLERS
