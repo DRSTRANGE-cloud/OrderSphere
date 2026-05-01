@@ -12,7 +12,6 @@ from mysql.connector import pooling
 from functools import wraps
 from datetime import datetime, timedelta
 from decimal import Decimal
-from datetime import datetime
 import json
 import re
 import hmac
@@ -34,6 +33,8 @@ if load_dotenv:
 # 
 #  APP CONFIG
 # 
+#  APP CONFIG
+# 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'ordersphere_ultra_secret_2024_xyz')
 app.config['SESSION_COOKIE_HTTPONLY'] = os.getenv('SESSION_COOKIE_HTTPONLY', 'True') == 'True'
@@ -41,6 +42,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = os.getenv('SESSION_COOKIE_SAMESITE', 'La
 app.config['SECURITY_PASSWORD_SALT'] = os.getenv('SECURITY_PASSWORD_SALT', 'ordersphere-auth-v2')
 app.config['VERIFY_TOKEN_MAX_AGE'] = int(os.getenv('VERIFY_TOKEN_MAX_AGE', 86400))
 app.config['RESET_TOKEN_MAX_AGE'] = int(os.getenv('RESET_TOKEN_MAX_AGE', 1800))
+
+# Order ID Encoding Secret
+SECRET_SALT = "ordersphere_secret"
 
 #  Connection Pool (handles concurrent users) 
 db_pool = pooling.MySQLConnectionPool(
@@ -110,21 +114,27 @@ demo_auth_repaired = False
 # 
 #  DECORATORS
 # 
-SECRET_SALT = "ordersphere_secret"
-
 def encode_order_id(order_id: int) -> str:
+    """Encode order ID using base64 for URL safety and obfuscation."""
     raw = f"{order_id}:{SECRET_SALT}"
     return "OS-" + base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
 
 def decode_order_id(encoded: str) -> int:
-    payload = encoded.replace("OS-", "")
-    decoded = base64.urlsafe_b64decode(payload + "==").decode()
-    oid, _ = decoded.split(":")
-    return int(oid)
-app.jinja_env.globals.update(encode_order_id=encode_order_id)
+    """Decode encoded order ID to get actual order_id."""
+    try:
+        payload = encoded.replace("OS-", "")
+        decoded = base64.urlsafe_b64decode(payload + "==").decode()
+        oid, _ = decoded.split(":")
+        return int(oid)
+    except Exception:
+        return None
+
 def format_order_no(order_id):
+    """Format order ID for display (e.g., OS-2026-000025)"""
     return f"OS-{datetime.now().year}-{order_id:06d}"
 
+# Register globally in Jinja
+app.jinja_env.globals.update(encode_order_id=encode_order_id)
 app.jinja_env.globals.update(format_order_no=format_order_no)
 def login_required(f):
     @wraps(f)
@@ -874,8 +884,7 @@ def create_order_from_items(uid, items, address_id, payment_note, customer_notes
     try:
         conn = get_db()
         cur = conn.cursor(dictionary=True, buffered=True)
-        if not conn.in_transaction:
-            conn.start_transaction()
+        conn.start_transaction()
 
         if not items:
             conn.rollback()
@@ -1158,33 +1167,43 @@ def update_order(oid):
         flash("Invalid status.", "error")
         return redirect(f'/orders/{oid}')
 
-    conn = get_db(); cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT user_id, status FROM orders WHERE order_id=%s", (oid,))
-    order = cur.fetchone()
-    if not order:
-        abort(404)
+    conn = None
+    cur = None
+    cur2 = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT user_id, status FROM orders WHERE order_id=%s", (oid,))
+        order = cur.fetchone()
+        if not order:
+            abort(404)
 
-    updates = {"status": new_status}
-    if agent_id:
-        updates["agent_id"] = int(agent_id)
-    if new_status == 'Delivered':
-        updates["delivered_at"] = datetime.now()
+        updates = {"status": new_status}
+        if agent_id:
+            updates["agent_id"] = int(agent_id)
+        if new_status == 'Delivered':
+            updates["delivered_at"] = datetime.now()
 
-    set_clause = ", ".join(f"{k}=%s" for k in updates)
-    cur2 = conn.cursor()
-    cur2.execute(f"UPDATE orders SET {set_clause} WHERE order_id=%s",
-                 list(updates.values()) + [oid])
-    conn.commit()
-    cur2.close()
+        set_clause = ", ".join(f"{k}=%s" for k in updates)
+        cur2 = conn.cursor()
+        cur2.execute(f"UPDATE orders SET {set_clause} WHERE order_id=%s",
+                     list(updates.values()) + [oid])
+        conn.commit()
 
-    log_status(oid, new_status, note or f'Status updated to {new_status}', session['user_id'])
+        log_status(oid, new_status, note or f'Status updated to {new_status}', session['user_id'])
 
-    emoji = {'Pending':'','Processing':'','Shipped':'',
-             'Out_for_Delivery':'','Delivered':'','Cancelled':''}.get(new_status,'')
-    notify(order['user_id'], f"Order #{oid} is now {new_status} {emoji}", "success")
+        emoji = {'Pending':'','Processing':'','Shipped':'',
+                 'Out_for_Delivery':'','Delivered':'','Cancelled':''}.get(new_status,'')
+        notify(order['user_id'], f"Order #{oid} is now {new_status} {emoji}", "success")
 
-    cur.close(); conn.close()
-    flash(f"Order #{oid} updated to {new_status}.", "success")
+        flash(f"Order #{oid} updated to {new_status}.", "success")
+    finally:
+        if cur2:
+            cur2.close()
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
     return redirect(f'/orders/{oid}')
 
 #  Delivery agent: update status 
@@ -1198,22 +1217,36 @@ def agent_update_order(oid):
         flash("You can only set Shipped / Out for Delivery / Delivered.", "error")
         return redirect('/agent/dashboard')
 
-    conn = get_db(); cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT user_id FROM orders WHERE order_id=%s", (oid,))
-    order = cur.fetchone()
-    updates = {"status": new_status}
-    if new_status == 'Delivered':
-        updates["delivered_at"] = datetime.now()
-    set_clause = ", ".join(f"{k}=%s" for k in updates)
-    cur2 = conn.cursor()
-    cur2.execute(f"UPDATE orders SET {set_clause} WHERE order_id=%s",
-                 list(updates.values()) + [oid])
-    conn.commit(); cur2.close()
-    log_status(oid, new_status, f'Updated by agent', session['user_id'])
-    if order:
-        notify(order['user_id'], f"Order #{oid}  {new_status} ", "success")
-    cur.close(); conn.close()
-    flash(f"Order #{oid}  {new_status}", "success")
+    conn = None
+    cur = None
+    cur2 = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT user_id FROM orders WHERE order_id=%s", (oid,))
+        order = cur.fetchone()
+        
+        updates = {"status": new_status}
+        if new_status == 'Delivered':
+            updates["delivered_at"] = datetime.now()
+        set_clause = ", ".join(f"{k}=%s" for k in updates)
+        cur2 = conn.cursor()
+        cur2.execute(f"UPDATE orders SET {set_clause} WHERE order_id=%s",
+                     list(updates.values()) + [oid])
+        conn.commit()
+        
+        log_status(oid, new_status, f'Updated by agent', session['user_id'])
+        if order:
+            notify(order['user_id'], f"Order #{oid} is now {new_status}", "success")
+        
+        flash(f"Order #{oid} updated to {new_status}.", "success")
+    finally:
+        if cur2:
+            cur2.close()
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
     return redirect('/agent/dashboard')
 
 # 
@@ -2042,6 +2075,18 @@ def verify_payment():
             cur.close()
             conn.close()
             
+
+@app.errorhandler(500)
+def internal_error(e):
+    print(f"⚠️  Internal Server Error: {e}")
+    return render_template("errors/500.html" if os.path.exists("templates/errors/500.html") else "errors/404.html",
+                          error_message="An unexpected error occurred. Please try again later."), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"⚠️  Unhandled Exception: {type(e).__name__}: {e}")
+    return render_template("errors/500.html" if os.path.exists("templates/errors/500.html") else "errors/404.html",
+                          error_message="Something went wrong. Our team has been notified."), 500
     except Exception as e:
         print(f"Error verifying payment: {e}")
         return jsonify({'error': 'Payment verification failed'}), 500

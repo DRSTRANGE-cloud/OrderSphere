@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Server Error · OrderSphere{% endblock %}
+{% block content %}
+
+<div class="main-wrap" style="padding:60px 20px;text-align:center">
+  <div class="error-container" style="max-width:500px;margin:0 auto">
+    <div style="font-size:120px;margin-bottom:20px">💥</div>
+    <h1 style="font-size:36px;margin-bottom:10px;color:var(--text-dark)">500 - Server Error</h1>
+    <p style="font-size:18px;color:var(--text-muted);margin-bottom:30px">
+      Something went wrong on our end. Our team has been notified and is working on it.
+    </p>
+    {% if error_message %}
+    <p style="font-size:14px;color:var(--warning-text);background:var(--warning-bg);padding:12px;border-radius:8px;margin-bottom:20px">
+      {{ error_message }}
+    </p>
+    {% endif %}
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="/" class="btn btn-primary">Go Home</a>
+      <a href="/orders" class="btn btn-outline">My Orders</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

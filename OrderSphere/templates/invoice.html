@@ -1,5 +1,5 @@
 ﻿{% extends "base.html" %}
-{% block title %}Invoice #{{ order.order_id }}  OrderSphere{% endblock %}
+{% block title %}Invoice {{ encode_order_id(order.order_id) }}  OrderSphere{% endblock %}
 {% block content %}
 <div class="main-wrap">
   <div class="flex-between mb-16" style="flex-wrap:wrap;gap:10px">

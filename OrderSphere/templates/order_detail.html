@@ -16,7 +16,7 @@
   <!-- HEADER -->
   <div class="flex-between" style="margin-bottom:28px;flex-wrap:wrap;gap:12px">
     <div>
-      <h1 class="page-title">Order #{{ order.order_id }}</h1>
+<h1 class="page-title">Order {{ encode_order_id(order.order_id) }}</h1>
       <p class="page-sub">
         Placed {{ order.ordered_at.strftime('%d %B %Y, %I:%M %p') if order.ordered_at else '' }}
       </p>
@@ -26,7 +26,7 @@
       <span class="status-badge st-{{ order.status.lower() }}">
         {{ icons.get(order.status,'') }} {{ order.status.replace('_',' ') }}
       </span>
-      <a href="/invoice/{{ order.order_id }}" class="btn btn-success btn-sm">Invoice</a>
+      <a href="/invoice/{{ encode_order_id(order.order_id) }}" class="btn btn-success btn-sm">Invoice</a>
     </div>
   </div>
 

@@ -38,7 +38,7 @@
         {% for o in orders %}
         {% set delayed = (o.age_hours > sla_limit and o.status not in ['Delivered','Cancelled']) %}
         <tr class="{% if delayed %}tr-delayed{% endif %}">
-          <td><a href="/orders/{{ o.order_id }}" class="fw-700 text-accent">#{{ o.order_id }}</a></td>
+<td><a href="/orders/{{ o.order_id }}" class="fw-700 text-accent">{{ encode_order_id(o.order_id) }}</a></td>
           {% if role == 'admin' %}
           <td>
             <div class="fw-700" style="font-size:.88rem">{{ o.username }}</div>

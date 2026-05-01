@@ -139,7 +139,7 @@
             <tbody>
               {% for o in recent_orders %}
               <tr>
-                <td><a href="/orders/{{ o.order_id }}" class="text-accent">#{{ o.order_id }}</a></td>
+<td><a href="/orders/{{ o.order_id }}" class="text-accent">{{ encode_order_id(o.order_id) }}</a></td>
                 <td>{{ o.username }}</td>
                 <td class="fw-700">&#8377;{{ "%.0f"|format(o.total_amount) }}</td>
                 <td><span class="status-badge st-{{ o.status.lower() }}" style="font-size:.68rem">{{ o.status.replace('_',' ') }}</span></td>
